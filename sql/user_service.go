@@ -22,12 +22,14 @@ func (service userService) Get(userID int) (*rocket.User, error) {
 		return nil, fmt.Errorf("prepare get user query: %v", err)
 	}
 
-	user := rocket.User{}
+	user := rocket.User{
+		ID: userID,
+	}
 
-	err = userQuery.QueryRow(userID).Scan()
+	err = userQuery.QueryRow(userID).Scan(&(user.GoogleID), &(user.FirstName), &(user.LastName), &(user.Title), &(user.Email))
 	if err != nil {
 		return nil, fmt.Errorf("query get user query: %v", err)
 	}
 
-	return nil, nil
+	return &user, nil
 }
