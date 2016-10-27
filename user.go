@@ -24,8 +24,9 @@ type User struct {
 	LastName  string `json:"last_name"`
 	Title     string `json:"title"`
 
-	Groups   []*Group  `json:"groups"`
-	Statuses []*Status `json:"statuses"`
+	JoinedGroups  []*Group  `json:"joined_groups"`
+	WatchedGroups []*Group  `json:"watched_groups"`
+	Statuses      []*Status `json:"statuses"`
 }
 
 type UserService interface {
