@@ -24,3 +24,11 @@ type Group struct {
 
 	Rules []*Rule `json:"rules"`
 }
+
+type GroupService interface {
+	Add(*Group) error
+	GetAll() ([]*Group, error)
+
+	// AddRule creates a Rule and assigns it to the Group
+	AddRule(*Group, *Rule) error
+}
