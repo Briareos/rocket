@@ -1,0 +1,5 @@
+db_user: rocket
+db_password: fkslkfpos48jfso4jfs4hvmxlsap9ew
+db_host: localhost
+db_name: rocket
+http_addr: ":8000"
