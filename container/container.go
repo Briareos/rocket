@@ -9,8 +9,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
-	"path"
-	"strings"
+	"github.com/Briareos/rocket/handle"
 )
 
 type Config struct {
@@ -108,13 +107,7 @@ func (c *Container) DB() *sql.DB {
 
 func (c *Container) HTTPHandler() *http.ServeMux {
 	return c.once.Do("HTTPHandler", func() interface{} {
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			if strings.HasPrefix(r.URL.Path, "/build/") {
-				http.ServeFile(w, r, path.Join("..", "..", r.URL.Path))
-			} else {
-				http.ServeFile(w, r, path.Join("..", "..", "index.html"))
-			}
-		})
+		http.HandleFunc("/", handle.Index())
 		return http.DefaultServeMux
 	}).(*http.ServeMux)
 }
