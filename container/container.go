@@ -5,12 +5,12 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/configor"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"reflect"
-	"html/template"
+	"path"
+	"strings"
 )
 
 type Config struct {
@@ -106,22 +106,17 @@ func (c *Container) DB() *sql.DB {
 	}).(*sql.DB)
 }
 
-func (c *Container) Template() map[string]*template.HTML {
-	return c.once.Do("Template", func()interface{}{
-		tpl := make(map[string]*template.HTML)
-		tpl["index"] = template.New("").Parse()
-	}).(*template.HTML)
-}
-
-func (c *Container) HTTPHandler() *httprouter.Router {
+func (c *Container) HTTPHandler() *http.ServeMux {
 	return c.once.Do("HTTPHandler", func() interface{} {
-		handler := httprouter.New()
-		handler.HandlerFunc("GET", "/", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/html")
-
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasPrefix(r.URL.Path, "/build/") {
+				http.ServeFile(w, r, path.Join("..", "..", r.URL.Path))
+			} else {
+				http.ServeFile(w, r, path.Join("..", "..", "index.html"))
+			}
 		})
-		return handler
-	}).(*httprouter.Router)
+		return http.DefaultServeMux
+	}).(*http.ServeMux)
 }
 
 func (c *Container) HTTPServer() *http.Server {
