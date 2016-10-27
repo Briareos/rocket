@@ -5,12 +5,11 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/configor"
-	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"reflect"
-	"html/template"
+	"github.com/Briareos/rocket/handle"
 )
 
 type Config struct {
@@ -106,22 +105,11 @@ func (c *Container) DB() *sql.DB {
 	}).(*sql.DB)
 }
 
-func (c *Container) Template() map[string]*template.HTML {
-	return c.once.Do("Template", func()interface{}{
-		tpl := make(map[string]*template.HTML)
-		tpl["index"] = template.New("").Parse()
-	}).(*template.HTML)
-}
-
-func (c *Container) HTTPHandler() *httprouter.Router {
+func (c *Container) HTTPHandler() *http.ServeMux {
 	return c.once.Do("HTTPHandler", func() interface{} {
-		handler := httprouter.New()
-		handler.HandlerFunc("GET", "/", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/html")
-
-		})
-		return handler
-	}).(*httprouter.Router)
+		http.HandleFunc("/", handle.Index())
+		return http.DefaultServeMux
+	}).(*http.ServeMux)
 }
 
 func (c *Container) HTTPServer() *http.Server {
