@@ -33,20 +33,8 @@ module.exports = {
         hot: true,
         inline: true,
         historyApiFallback: true,
-        proxy: {
-            "/api": {
-                "target": {
-                    "host": "api.rocket.dev",
-                    "protocol": 'http:',
-                    "port": 8000
-                },
-                ignorePath: true,
-                changeOrigin: true,
-                secure: false
-            }
-        },
         port: '4000',
-        host: '127.0.0.1'
+        host: 'rocket.dev'
     },
     plugins: [
         new HtmlWebpackPlugin({
