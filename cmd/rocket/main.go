@@ -6,33 +6,13 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/Briareos/rocket"
 	"github.com/Briareos/rocket/container"
+	"strconv"
+	"time"
+	"github.com/Briareos/rocket/response"
+	"github.com/Briareos/rocket/sql"
 )
-
-type groupDays struct {
-	Group rocket.Group
-	Days  []day
-}
-
-type day struct {
-	Date time.Time
-	AvailableBodyCount     int           `json:"availableBodyCount"`
-	ActiveRules        []rocket.Rule `json:"activeRules"`
-}
-
-type ProfileUser struct {
-	*rocket.User
-	JoinedGroups  []int       `json:"joined_groups"`
-	WatchedGroups []int       `json:"watched_groups"`
-	MutedRules    []int       `json:"muted_rules"`
-	ActiveRules   map[int]int `json:"active_rules"` //Map for each group (key) how many alerts are active (value)
-}
-
-type profileResponse struct {
-	User   ProfileUser     `json:"user"`
-	Groups []*rocket.Group `json:"groups"`
-	Users  []*rocket.User  `json:"users"`
-}
 
 func makeProfileFunc(userService rocket.UserService, groupService rocket.GroupService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -68,8 +48,8 @@ func makeProfileFunc(userService rocket.UserService, groupService rocket.GroupSe
 			return
 		}
 
-		responseData := profileResponse{
-			User: ProfileUser{
+		responseData := response.ProfileResponse{
+			User: response.ProfileUser{
 				User:          user,
 				JoinedGroups:  joinedGroups,
 				WatchedGroups: watchedGroups,
@@ -78,8 +58,6 @@ func makeProfileFunc(userService rocket.UserService, groupService rocket.GroupSe
 			Groups: allGroups,
 			Users:  allUsers,
 		}
-
-		fmt.Printf("%#v\n", responseData)
 
 		data, err := json.Marshal(responseData)
 		if err != nil {
@@ -94,18 +72,22 @@ func makeProfileFunc(userService rocket.UserService, groupService rocket.GroupSe
 
 func makeGroupDays(groupService rocket.GroupService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//group, err := groupService.Get(1)
-		//if err != nil {
-		//	http.Error(w, err.Error(), http.StatusInternalServerError)
-		//	return
-		//}
+		id := r.URL.Query().Get("id")
+		if len(id) == 0 {
+			http.Error(w, "ID not provided correctly", http.StatusInternalServerError)
+			return
+		}
 
-		//TODO: GRoup get
-		group := &rocket.Group {
-			ID: 2,
-			Name: "lazareva-tajna-grupa",
-			Availability: rocket.DefaultAvailability,
-			Description: "be afraid",
+		idNumber, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "Month not provided correctly", http.StatusInternalServerError)
+			return
+		}
+
+		group, err := groupService.Get(idNumber)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		month := r.URL.Query().Get("month")
@@ -126,21 +108,18 @@ func makeGroupDays(groupService rocket.GroupService) http.Handler {
 			return
 		}
 
-		yearNumber, err :=  strconv.Atoi(year)
+		yearNumber, err := strconv.Atoi(year)
 		if err != nil {
 			http.Error(w, "Year not provided correctly", http.StatusInternalServerError)
 			return
 		}
 
-		var groupDays groupDays
+		var groupDays response.GroupDays
 
 		// First day of month in given year
 		date := time.Date(yearNumber, time.Month(monthNumber), 1, 0, 0, 0, 0, time.UTC)
-		daysInMonth := time.Date(yearNumber, time.Month(monthNumber) + 1, 0, 0, 0, 0, 0, time.UTC).Day()
+		daysInMonth := time.Date(yearNumber, time.Month(monthNumber)+1, 0, 0, 0, 0, 0, time.UTC).Day()
 		availableBodyCounts, err := groupService.GetAvailableBodyCounts(group, date)
-
-		fmt.Printf("#%v", daysInMonth)
-		fmt.Printf("#%v", date)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -153,12 +132,12 @@ func makeGroupDays(groupService rocket.GroupService) http.Handler {
 				availableBodyCounts[date] = 0
 			}
 			// Move to next day
-			date = date.AddDate(0,0,1)
+			date = date.AddDate(0, 0, 1)
 		}
 
 		for date, count := range availableBodyCounts {
-			groupDays.Days = append(groupDays.Days, day{
-				Date: date,
+			groupDays.Days = append(groupDays.Days, response.Day{
+				Date:               date,
 				AvailableBodyCount: count,
 			})
 		}
@@ -180,7 +159,6 @@ func main() {
 	c := container.MustLoadFromPath(filepath.Join("..", "..", "config.yml"))
 	c.MustWarmUp()
 
-	c.HTTPHandler().Handle("/api/v1/groupDays", makeGroupDays())
 	userService := sql.NewUserService(c.DB())
 	groupService := sql.NewGroupService(c.DB())
 

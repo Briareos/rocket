@@ -162,7 +162,6 @@ func (service groupService) GetAvailableBodyCounts(group *rocket.Group, day time
 		return counts, fmt.Errorf("prepare query: %v", err)
 	}
 
-	//rows, err := query.Query(group.ID, day.Year(), int(day.Month()))
 	rows, err := query.Query(group.ID, day.Year(), int(day.Month()))
 	if err != nil {
 		return counts, fmt.Errorf("prepare query: %v", err)
@@ -205,4 +204,24 @@ func (service groupService) GetTotalBodyCount(group *rocket.Group) (int, error) 
 	}
 
 	return count, nil
+}
+
+func (service groupService) Get(groupID int) (*rocket.Group, error) {
+	groupQuery, err := service.db.Prepare(`SELECT name, description, busy_value, remote_value FROM groups  WHERE id=?`)
+	if err != nil {
+		return nil, fmt.Errorf("prepare query: %v", err)
+	}
+
+	group := rocket.Group{
+		ID: groupID,
+	}
+
+	group.Availability = rocket.DefaultAvailability
+
+	err = groupQuery.QueryRow(groupID).Scan(&(group.Name), &(group.Description), &(group.Availability.Busy), &(group.Availability.Remote))
+	if err != nil {
+		return nil, fmt.Errorf("execute query: %v", err)
+	}
+
+	return &group, nil
 }

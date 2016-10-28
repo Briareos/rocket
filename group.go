@@ -26,6 +26,8 @@ type Group struct {
 }
 
 type GroupService interface {
+	Get(int) (*Group, error)
+
 	Add(*Group) error
 	GetAll() ([]*Group, error)
 
