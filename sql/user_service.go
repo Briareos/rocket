@@ -45,6 +45,15 @@ func (service *userService) Get(userID int) (*rocket.User, error) {
 	return user, nil
 }
 
+func (service *userService) GetByGoogleID(googleID string) (*rocket.User, error) {
+	user, err := service.selectUserByGoodleIDQuery(googleID)
+	if err != nil {
+		return nil, fmt.Errorf("select user: %v", err)
+	}
+
+	return user, nil
+}
+
 func (service *userService) GetAll() ([]*rocket.User, error) {
 	users, err := service.selectAllUsersQuery()
 	if err != nil {
@@ -69,6 +78,24 @@ func (service *userService) selectUserQuery(userID int) (*rocket.User, error) {
 	}
 
 	err = userQuery.QueryRow(userID).Scan(&(user.GoogleID), &(user.FirstName), &(user.LastName), &(user.Title), &(user.Email))
+	if err != nil {
+		return nil, fmt.Errorf("execute query: %v", err)
+	}
+
+	return &user, nil
+}
+
+func (service *userService) selectUserByGoodleIDQuery(googleID string) (*rocket.User, error) {
+	userQuery, err := service.db.Prepare(`SELECT id, first_name, last_name, title, email FROM users WHERE google_account_id=?`)
+	if err != nil {
+		return nil, fmt.Errorf("prepare query: %v", err)
+	}
+
+	user := rocket.User{
+		GoogleID: googleID,
+	}
+
+	err = userQuery.QueryRow(googleID).Scan(&(user.ID), &(user.FirstName), &(user.LastName), &(user.Title), &(user.Email))
 	if err != nil {
 		return nil, fmt.Errorf("execute query: %v", err)
 	}

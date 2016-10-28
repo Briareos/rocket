@@ -32,6 +32,7 @@ type User struct {
 
 type UserService interface {
 	Get(int) (*User, error)
+	GetByGoogleID(string) (*User, error)
 	GetAll() ([]*User, error)
 	Add(*User) error
 
