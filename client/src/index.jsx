@@ -7,10 +7,8 @@ import configureStore from "./store/StoreConfiguration";
 import {getProfile, getGroupDays} from "./actions/actionCreators";
 import Api from './utils/Api';
 
-const renderApplication = (initialStore) => {
-    const store = configureStore(initialStore);
-    store.dispatch(getProfile());
-    store.dispatch(getGroupDays(1, 10, 2016));
+const renderApplication = (initialState) => {
+    const store = configureStore(initialState);
 
     render(
         <Provider store={store}>
@@ -18,6 +16,7 @@ const renderApplication = (initialStore) => {
         </Provider>,
         document.getElementById('rocket-application')
     );
+    document.getElementById('loading-state').className = "loading-state hide"
 };
 
 Api.get('profile').then(response => {

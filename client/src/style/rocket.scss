@@ -1,7 +1,41 @@
 @import "base/module";
 @import "components/module";
 
+body {
+  display: flex;
+  position: relative;
+}
+
 #rocket-application {
   display: flex;
-  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  z-index: 1000;
+
+  .application-wrapper {
+    flex: 1 1 0;
+    flex-direction: row;
+    display: flex;
+  }
+  .main-container {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+
+    .content-wrapper {
+      flex: 1 1 0;
+      display: flex;
+
+      .page {
+        flex: 1 1 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      .flex-page {
+        flex: 1 1 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+    }
+  }
 }

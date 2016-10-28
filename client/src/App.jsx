@@ -1,14 +1,23 @@
 import React, {Component, PropTypes} from "react";
 
+import Sidebar from './Components/Sidebar';
+import Header from './Components/Header';
+
 class App extends Component {
     constructor (props) {
         super(props);
     }
     render () {
         return (
-            <div>
-                <nav>header</nav>
-                {this.props.children}
+            <div className="application-wrapper">
+                <Sidebar/>
+                <div className="main-container">
+                    <Header/>
+                    <div className="content-wrapper">
+                        {this.props.children}
+                    </div>
+                </div>
+
             </div>
         )
     }
