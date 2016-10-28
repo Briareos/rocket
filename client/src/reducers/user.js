@@ -24,6 +24,14 @@ export default function (state = {
                 joined_groups: [...state.joined_groups].filter(groupID => groupID != action.groupID),
                 watched_groups: [...state.watched_groups].filter(groupID => groupID != action.groupID),
             });
+        case actions.WATCH_GROUP_SUCCESS:
+            return Object.assign({}, state, {
+                watched_groups: [...state.watched_groups, action.groupID],
+            });
+        case actions.UNWATCH_GROUP_SUCCESS:
+            return Object.assign({}, state, {
+                watched_groups: [...state.watched_groups].filter(groupID => groupID != action.groupID),
+            });
         default:
             return state;
     }
