@@ -1,21 +1,21 @@
 package handle
 
 import (
+	"encoding/json"
 	"github.com/Briareos/rocket"
 	"net/http"
-	"encoding/json"
 )
 
 type RuleActionType string
 
 const (
-	Mute RuleActionType = "mute"
+	Mute   RuleActionType = "mute"
 	UnMute RuleActionType = "unmute"
 )
 
 type RuleActionRequest struct {
-	RuleID int `json:"ruleID"`
-	Type RuleActionType `json:"type"`
+	RuleID int            `json:"ruleID"`
+	Type   RuleActionType `json:"type"`
 }
 
 func RuleAction(userService rocket.UserService) http.HandlerFunc {
@@ -38,26 +38,26 @@ func RuleAction(userService rocket.UserService) http.HandlerFunc {
 		defer r.Body.Close()
 
 		// TODO: Losmi spoji sa sesijom
-		user, err := userService.Get(1)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if requestBody.Type == Mute {
-			err := userService.MuteRule(user, requestBody.RuleID)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		if requestBody.Type == UnMute {
-			err := userService.UnMuteRule(user, requestBody.RuleID)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
+		//user, err := userService.Get(1)
+		//if err != nil {
+		//	http.Error(w, err.Error(), http.StatusInternalServerError)
+		//	return
+		//}
+		//
+		//if requestBody.Type == Mute {
+		//	err := userService.MuteRule(user, requestBody.RuleID)
+		//	if err != nil {
+		//		http.Error(w, err.Error(), http.StatusInternalServerError)
+		//		return
+		//	}
+		//}
+		//
+		//if requestBody.Type == UnMute {
+		//	err := userService.UnMuteRule(user, requestBody.RuleID)
+		//	if err != nil {
+		//		http.Error(w, err.Error(), http.StatusInternalServerError)
+		//		return
+		//	}
+		//}
 	})
 }
