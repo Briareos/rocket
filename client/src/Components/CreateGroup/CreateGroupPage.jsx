@@ -3,17 +3,23 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
 import * as Actions from '../../actions/actionCreators';
+import GroupNameInput from './GroupNameInput';
 
-class GroupPage extends Component {
+class CreateGroupPage extends Component {
     constructor(props) {
         super(props);
+
+        this.handleInputEnter = this.handleInputEnter.bind(this);
     }
     render() {
         return (
             <div id="group-page" className="page">
-                <GroupNameInput groups={this.props.groups}/>
+                <GroupNameInput groups={this.props.groups} onEnter={this.handleInputEnter}/>
             </div>
         );
+    }
+    handleInputEnter() {
+        console.log('asdasd');
     }
 }
 
@@ -28,4 +34,4 @@ function mapDispatchToProps(dispatch) {
         actions: bindActionCreators(Actions, dispatch)
     }
 }
-export default connect(mapStateToProps, mapDispatchToProps())(GroupPage);
+export default connect(mapStateToProps, mapDispatchToProps)(CreateGroupPage);

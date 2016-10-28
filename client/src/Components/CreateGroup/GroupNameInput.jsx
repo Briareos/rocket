@@ -18,7 +18,7 @@ class GroupNameInput extends Component {
     render() {
         return (
             <div className="group-name-input-wrapper">
-                <input type="text"/>
+                <input type="text" onChange={this.handleInputUpdate} onKeyDown={this.handleKeyPress}/>
                 {this.state.existingGroups.length > 0 ?
                     <GroupList>
                         {this.state.existingGroups.map(group =>
@@ -29,11 +29,23 @@ class GroupNameInput extends Component {
             </div>
         )
     }
-    handleInputUpdate() {
+    handleInputUpdate(event) {
+        var query = event.target.value;
 
+        if (query) {
+            this.setState({
+                existingGroups: this.props.groups.filter(group => group.name.includes(query))
+            });
+        } else {
+            this.setState({
+                existingGroups: []
+            });
+        }
     }
-    handleKeyPress() {
-
+    handleKeyPress(event) {
+        if(event.key == 'Enter') {
+            console.log('enter press here! ')
+        }
     }
     handleGroupSelect() {
 
@@ -42,5 +54,7 @@ class GroupNameInput extends Component {
 
 GroupNameInput.propTypes = {
     groups: PropTypes.array.isRequired,
-    onEnter: PropTypes.function
+    onEnter: PropTypes.func
 };
+
+export default GroupNameInput;
