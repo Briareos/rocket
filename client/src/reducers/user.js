@@ -9,15 +9,20 @@ export default function (state = {
     switch (action.type) {
         case actions.GET_PROFILE_SUCCESS:
             return Object.assign({}, state, action.user);
-        case actions.CREATE_GROUP:
+        case actions.CREATE_GROUP_SUCCESS:
             return Object.assign({}, state, {
                 joined_groups: [...state.joined_groups, action.group.id],
                 watched_groups: [...state.watched_groups, action.group.id],
             });
-        case actions.JOIN_GROUP:
+        case actions.JOIN_GROUP_SUCCESS:
             return Object.assign({}, state, {
                 joined_groups: [...state.joined_groups, action.groupID],
                 watched_groups: [...state.watched_groups, action.groupID],
+            });
+        case actions.LEAVE_GROUP_SUCCESS:
+            return Object.assign({}, state, {
+                joined_groups: [...state.joined_groups].filter(groupID => groupID != action.groupID),
+                watched_groups: [...state.watched_groups].filter(groupID => groupID != action.groupID),
             });
         default:
             return state;

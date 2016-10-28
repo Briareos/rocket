@@ -4,7 +4,7 @@ import * as action from "./actions";
 export function getProfile() {
     return dispatch => {
         dispatch(getProfileStarted());
-        Api.get('profile').then(
+        return Api.get('profile').then(
             response => {
                 dispatch(getProfileSuccess(response.data.user, response.data.groups, response.data.users));
             },
@@ -40,7 +40,7 @@ function getProfileFailure(message) {
 export function getGroupDays(id, month, year) {
     return dispatch => {
         dispatch(getGroupDaysStarted());
-        Api.get('groupDays', {
+        return Api.get('groupDays', {
             params: {id, month, year}
         }).then(
             response => {
@@ -78,7 +78,7 @@ function getGroupDaysFailure(message) {
 export function createGroup(name, description, busyValue = false, remoteValue = true) {
     return dispatch => {
         dispatch(createGroupStarted());
-        Api.post('groupCreate', {
+        return Api.post('groupCreate', {
             name,
             description,
             busyValue,
@@ -117,7 +117,7 @@ function createGroupFailure(message) {
 export function joinGroup(groupID) {
     return dispatch => {
         dispatch(joinGroupStarted());
-        Api.post('groupAction', {
+        return Api.post('groupAction', {
             type: 'join',
             groupID: groupID,
         }).then(
@@ -147,6 +147,44 @@ function joinGroupSuccess(groupID) {
 function joinGroupFailure(message) {
     return {
         type: action.JOIN_GROUP_FAILURE,
+        message,
+    }
+}
+
+
+export function leaveGroup(groupID) {
+    return dispatch => {
+        dispatch(leaveGroupStarted());
+        return Api.post('groupAction', {
+            type: 'leave',
+            groupID: groupID,
+        }).then(
+            response => {
+                dispatch(leaveGroupSuccess(groupID));
+            },
+            error => {
+                dispatch(leaveGroupFailure(error));
+            }
+        )
+    }
+}
+
+function leaveGroupStarted() {
+    return {
+        type: action.LEAVE_GROUP,
+    }
+}
+
+function leaveGroupSuccess(groupID) {
+    return {
+        type: action.LEAVE_GROUP_SUCCESS,
+        groupID,
+    }
+}
+
+function leaveGroupFailure(message) {
+    return {
+        type: action.LEAVE_GROUP_FAILURE,
         message,
     }
 }
