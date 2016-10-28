@@ -4,8 +4,7 @@ import {Router, browserHistory} from "react-router";
 import {Provider} from "react-redux";
 import routes from "./routes";
 import configureStore from "./store/StoreConfiguration";
-import {getProfile, getGroupDays} from "./actions/actionCreators";
-import Api from './utils/Api';
+import Api from "./utils/Api";
 
 const renderApplication = (initialState) => {
     const store = configureStore(initialState);

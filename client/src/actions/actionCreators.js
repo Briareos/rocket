@@ -121,7 +121,7 @@ export function joinGroup(groupID) {
             type: 'join',
             groupID: groupID,
         }).then(
-            response => {
+            () => {
                 dispatch(joinGroupSuccess(groupID));
             },
             error => {
@@ -159,7 +159,7 @@ export function leaveGroup(groupID) {
             type: 'leave',
             groupID: groupID,
         }).then(
-            response => {
+            () => {
                 dispatch(leaveGroupSuccess(groupID));
             },
             error => {
@@ -196,7 +196,7 @@ export function watchGroup(groupID) {
             type: 'watch',
             groupID: groupID,
         }).then(
-            response => {
+            () => {
                 dispatch(watchGroupSuccess(groupID));
             },
             error => {
@@ -233,7 +233,7 @@ export function unwatchGroup(groupID) {
             type: 'unwatch',
             groupID: groupID,
         }).then(
-            response => {
+            () => {
                 dispatch(unwatchGroupSuccess(groupID));
             },
             error => {
@@ -266,7 +266,7 @@ function unwatchGroupFailure(message) {
 export function createRule(groupID, description, type, operation, threshold) {
     return dispatch => {
         dispatch(createRuleStarted());
-        return Api.post('createRule', {
+        return Api.post('ruleCreate', {
             groupID,
             rule: {
                 description,
