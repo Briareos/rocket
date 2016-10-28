@@ -2,6 +2,7 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import * as groupSelectors from "../../selectors/groupSelectors";
 import SidebarUserInfo from "./SidebarUserInfo";
+import SidebarGroups from './SidebarGroups';
 
 class Sidebar extends Component {
     constructor(props) {
@@ -9,9 +10,13 @@ class Sidebar extends Component {
     }
 
     render() {
+        let {user, joinedGroups, watchedGroups} = this.props;
+        console.log(user, joinedGroups, watchedGroups);
         return (
             <div className="sidebar">
-                <SidebarUserInfo user={this.props.user}/>
+                <SidebarUserInfo user={user}/>
+                <SidebarGroups groups={joinedGroups} label={"Joined Groups"}/>
+                <SidebarGroups groups={watchedGroups} label={"Watched Groups"}/>
             </div>
         );
     }

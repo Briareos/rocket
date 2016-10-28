@@ -9,7 +9,6 @@ import (
 	"github.com/Briareos/rocket/request"
 	oursql "github.com/Briareos/rocket/sql"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/sessions"
 	"github.com/jinzhu/configor"
 	"github.com/pkg/errors"
 	"log"
@@ -17,6 +16,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"github.com/gorilla/sessions"
 )
 
 type Config struct {
@@ -28,6 +28,8 @@ type Config struct {
 	GoogleOAuthID     string `yaml:"google_oauth_id"`
 	GoogleOAuthSecret string `yaml:"google_oauth_secret"`
 	Secret            string `yaml:"secret"`
+	RedisHost         string `yaml:"redis_host"`
+	RedisPassword     string `yaml:"redis_password"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -151,15 +153,16 @@ func (c *Container) HomeURL() string {
 		} else if port != "" {
 			port = ":" + port
 		}
-		return strings.TrimRight(proto+host+port, "/")
+		return strings.TrimRight(proto + host + port, "/")
 	}).(string)
 }
 
 func (c *Container) HTTPHandler() *http.ServeMux {
 	return c.once.Do("HTTPHandler", func() interface{} {
 		redirectURI := c.HomeURL() + "/oauth/google/callback"
-		http.HandleFunc("/oauth/google/callback", c.makeHandle(handle.GoogleOAuthCallback(c.conf.GoogleOAuthID, c.conf.GoogleOAuthSecret, redirectURI)))
+		http.HandleFunc("/oauth/google/callback", c.makeHandle(handle.GoogleOAuthCallback(c.conf.GoogleOAuthID, c.conf.GoogleOAuthSecret, redirectURI, c.HomeURL(), c.UserService())))
 		http.HandleFunc("/oauth/google", c.makeHandle(handle.GoogleOAuth(c.conf.GoogleOAuthID, redirectURI)))
+		http.HandleFunc("/logout", c.makeHandle(handle.LogoutAndRedirect(c.HomeURL()))) //@todo CSRF
 		http.HandleFunc("/api/current-user", c.makeHandle(handle.CurrentUser()))
 		http.HandleFunc("/api/profile", c.makeHandle(handle.Profile(c.UserService(), c.GroupService())))
 
@@ -176,21 +179,31 @@ func (c *Container) HTTPHandler() *http.ServeMux {
 }
 
 func (c *Container) makeHandle(h http.HandlerFunc) http.HandlerFunc {
-	return c.enableCORS(c.injectToken(h))
+	return c.enableCORS(c.injectToken(c.firewall(h)))
+}
+
+func (c *Container) firewall(h http.HandlerFunc) http.HandlerFunc {
+	redirectTo := c.HomeURL() + "/oauth/google"
+	return func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/api/") && request.GetToken(r).User() == nil {
+			http.Redirect(w, r, redirectTo, 302)
+			return
+		}
+		h(w, r)
+	}
 }
 
 func (c *Container) injectToken(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := c.Session().Get(r, "session")
+		session, err := c.CookieStore().Get(r, "session")
 		if err != nil {
 			http.Error(w, "Invalid session provided", 500)
 			return
 		}
-		tok := rocket.NewToken(session)
-		//tok.SetUser(user)
+		tok := rocket.NewToken(session, c.UserService(), r, w)
+		r = r.WithContext(context.WithValue(r.Context(), request.Session, session))
 		r = r.WithContext(context.WithValue(r.Context(), request.Token, tok))
 		h(w, r)
-		session.Store()
 	}
 }
 
@@ -218,8 +231,9 @@ func (c *Container) HTTPServer() *http.Server {
 	}).(*http.Server)
 }
 
-func (c *Container) Session() *sessions.CookieStore {
-	return c.once.Do("Session", func() interface{} {
-		return sessions.NewCookieStore([]byte("something-very-secret"))
+func (c *Container) CookieStore() *sessions.CookieStore {
+	return c.once.Do("CookieStore", func() interface{} {
+		store := sessions.NewCookieStore([]byte(c.conf.Secret))
+		return store
 	}).(*sessions.CookieStore)
 }
