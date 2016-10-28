@@ -17,7 +17,6 @@ type GroupCreateRequest struct {
 
 func GroupCreate(groupService rocket.GroupService) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		if r.Method != http.MethodPost {
 			http.Error(w, "Only POST is allowed", http.StatusMethodNotAllowed)
 			return

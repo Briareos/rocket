@@ -1,19 +1,18 @@
 package handle
 
 import (
+	"encoding/json"
 	"github.com/Briareos/rocket"
 	"net/http"
-	"encoding/json"
 )
 
 type RuleCreateRequest struct {
-	GroupID int `json:"groupID"`
-        Rule rocket.Rule `json:"rule"`
+	GroupID int         `json:"groupID"`
+	Rule    rocket.Rule `json:"rule"`
 }
 
 func RuleCreate(groupService rocket.GroupService) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		if r.Method != http.MethodPost {
 			http.Error(w, "Only POST is allowed", http.StatusMethodNotAllowed)
 			return
@@ -29,7 +28,6 @@ func RuleCreate(groupService rocket.GroupService) http.HandlerFunc {
 			return
 		}
 		defer r.Body.Close()
-
 
 		group, err := groupService.Get(requestBody.GroupID)
 		if err != nil {
