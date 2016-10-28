@@ -5,11 +5,11 @@ import {Provider} from "react-redux";
 import routes from "./routes";
 import configureStore from "./store/StoreConfiguration";
 import {getProfile} from "./actions/actionCreators";
+import Api from './utils/Api';
 
-const renderApplication = (initialStore) => {
-    const store = configureStore(initialStore);
-    store.dispatch(getProfile());
-
+const renderApplication = (initialState) => {
+    const store = configureStore(initialState);
+    
     render(
         <Provider store={store}>
             <Router history={browserHistory} routes={routes}/>
@@ -18,4 +18,7 @@ const renderApplication = (initialStore) => {
     );
 };
 
-renderApplication();
+Api.get('profile').then(response => {
+    let initialState = response.data;
+    renderApplication(initialState);
+});
