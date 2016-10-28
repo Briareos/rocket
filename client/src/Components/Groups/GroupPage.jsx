@@ -1,14 +1,17 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
+import React, {Component} from "react";
+import {connect} from "react-redux";
+import * as selectors from "../../selectors/groupSelectors";
+import Calendar from "../Calendar/Calendar";
 
 class GroupPage extends Component {
     constructor(props) {
         super(props);
     }
+
     render() {
         return (
             <div id="group-page" className="page" >
-                group page
+                <Calendar calendarData={this.props.calendarData} totalBodyCount={this.props.totalBodyCount}/>
             </div>
         );
     }
@@ -16,7 +19,9 @@ class GroupPage extends Component {
 
 function mapStateToProps (state) {
     return {
-        groups: state.groups
+        group: state.group,
+        calendarData: selectors.getCalendarGroupData(state),
+        totalBodyCount: state.groupCalendar.bodyCountRightNow,
     };
 }
 
