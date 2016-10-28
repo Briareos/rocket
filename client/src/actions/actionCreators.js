@@ -189,5 +189,77 @@ function leaveGroupFailure(message) {
     }
 }
 
+export function watchGroup(groupID) {
+    return dispatch => {
+        dispatch(watchGroupStarted());
+        return Api.post('groupAction', {
+            type: 'watch',
+            groupID: groupID,
+        }).then(
+            response => {
+                dispatch(watchGroupSuccess(groupID));
+            },
+            error => {
+                dispatch(watchGroupFailure(error));
+            }
+        )
+    }
+}
 
-//ruleCreate, groupAction, ruleAction (primaju type)
+function watchGroupStarted() {
+    return {
+        type: action.WATCH_GROUP,
+    }
+}
+
+function watchGroupSuccess(groupID) {
+    return {
+        type: action.WATCH_GROUP_SUCCESS,
+        groupID,
+    }
+}
+
+function watchGroupFailure(message) {
+    return {
+        type: action.WATCH_GROUP_FAILURE,
+        message,
+    }
+}
+
+
+export function unwatchGroup(groupID) {
+    return dispatch => {
+        dispatch(unwatchGroupStarted());
+        return Api.post('groupAction', {
+            type: 'unwatch',
+            groupID: groupID,
+        }).then(
+            response => {
+                dispatch(unwatchGroupSuccess(groupID));
+            },
+            error => {
+                dispatch(unwatchGroupFailure(error));
+            }
+        )
+    }
+}
+
+function unwatchGroupStarted() {
+    return {
+        type: action.WATCH_GROUP,
+    }
+}
+
+function unwatchGroupSuccess(groupID) {
+    return {
+        type: action.WATCH_GROUP_SUCCESS,
+        groupID,
+    }
+}
+
+function unwatchGroupFailure(message) {
+    return {
+        type: action.WATCH_GROUP_FAILURE,
+        message,
+    }
+}
