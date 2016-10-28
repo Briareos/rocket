@@ -228,3 +228,38 @@ func (service *userService) selectStatusesQuery(userID int) ([]*rocket.Status, e
 		statuses = append(statuses, &status)
 	}
 }
+
+func (service *userService) JoinGroup(user *rocket.User, group *rocket.Group) error {
+	query, err := service.db.Prepare(`
+		INSERT INTO user_group_assignments (user_id, group_id)
+		VALUES (?, ?)
+	`)
+
+	if err != nil {
+		return fmt.Errorf("prepare query: %v", err)
+	}
+
+	_, err = query.Exec(user.ID, group.ID)
+	if err != nil {
+		return fmt.Errorf("exec query: %v", err)
+	}
+	return nil
+}
+
+func (service *userService) LeaveGroup(user *rocket.User, group *rocket.Group) error {
+	query, err := service.db.Prepare(`
+		DELETE FROM user_group_assignments
+		WHERE user_id=?
+		AND group_id=?
+		`)
+
+	if err != nil {
+		return fmt.Errorf("prepare query: %v", err)
+	}
+
+	_, err = query.Exec(user.ID, group.ID)
+	if err != nil {
+		return fmt.Errorf("exec query: %v", err)
+	}
+	return nil
+}

@@ -35,9 +35,9 @@ type UserService interface {
 	GetAll() ([]*User, error)
 	Add(*User) error
 
-	//JoinGroup(*User, *Group) error
-	//LeaveGroup(*User, *Group) error
-	//
+	JoinGroup(*User, *Group) error
+	LeaveGroup(*User, *Group) error
+
 	//WatchGroup(*User, *Group) error
 	//UnWatchGroup(*User, *Group) error
 	//

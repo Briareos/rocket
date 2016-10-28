@@ -159,6 +159,7 @@ func (c *Container) HTTPHandler() *http.ServeMux {
 
 		http.HandleFunc("/api/groupDays", c.makeHandle(handle.GroupDays(c.GroupService())))
 		http.HandleFunc("/api/groupCreate", c.makeHandle(handle.GroupCreate(c.GroupService())))
+		http.HandleFunc("/api/groupAction", c.makeHandle(handle.GroupAction(c.UserService(), c.GroupService())))
 
 		http.HandleFunc("/", c.makeHandle(handle.Index()))
 		return http.DefaultServeMux
