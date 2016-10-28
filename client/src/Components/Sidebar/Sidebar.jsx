@@ -1,16 +1,17 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
-
-import SidebarUserInfo from './SidebarUserInfo';
+import React, {Component} from "react";
+import {connect} from "react-redux";
+import * as groupSelectors from "../../selectors/groupSelectors";
+import SidebarUserInfo from "./SidebarUserInfo";
 
 class Sidebar extends Component {
     constructor(props) {
         super(props);
     }
+
     render() {
         return (
             <div className="sidebar">
-                <SidebarUserInfo user={this.props.user} />
+                <SidebarUserInfo user={this.props.user}/>
             </div>
         );
     }
@@ -18,7 +19,9 @@ class Sidebar extends Component {
 
 function mapStateToProps(state) {
     return {
-        user: state.user
+        user: state.user,
+        joinedGroups: groupSelectors.getJoinedGroupsForUser(state),
+        watchedGroups: groupSelectors.getWatchedGroupsForUser(state)
     };
 }
 
