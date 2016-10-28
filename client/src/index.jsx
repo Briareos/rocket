@@ -19,6 +19,10 @@ const renderApplication = (initialState) => {
 };
 
 Api.get('profile').then(response => {
+    if (!response.ok && response.error === "not_logged_in") {
+        window.location.href = response.loginURL;
+        return;
+    }
     let initialState = response.data;
     renderApplication(initialState);
 });

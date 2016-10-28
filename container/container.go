@@ -3,12 +3,14 @@ package container
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/Briareos/rocket"
 	"github.com/Briareos/rocket/handle"
 	"github.com/Briareos/rocket/request"
 	oursql "github.com/Briareos/rocket/sql"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/sessions"
 	"github.com/jinzhu/configor"
 	"github.com/pkg/errors"
 	"log"
@@ -16,7 +18,6 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
-	"github.com/gorilla/sessions"
 )
 
 type Config struct {
@@ -153,7 +154,7 @@ func (c *Container) HomeURL() string {
 		} else if port != "" {
 			port = ":" + port
 		}
-		return strings.TrimRight(proto + host + port, "/")
+		return strings.TrimRight(proto+host+port, "/")
 	}).(string)
 }
 
@@ -186,7 +187,14 @@ func (c *Container) firewall(h http.HandlerFunc) http.HandlerFunc {
 	redirectTo := c.HomeURL() + "/oauth/google"
 	return func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/api/") && request.GetToken(r).User() == nil {
-			http.Redirect(w, r, redirectTo, 302)
+			if strings.Contains(r.Header.Get("Accept"), "application/json") {
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"error": "not_logged_in",
+					"loginURL": redirectTo,
+				})
+			} else {
+				http.Redirect(w, r, redirectTo, 302)
+			}
 			return
 		}
 		h(w, r)
