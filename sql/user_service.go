@@ -290,3 +290,38 @@ func (service *userService) LeaveGroup(user *rocket.User, group *rocket.Group) e
 	}
 	return nil
 }
+
+func (service *userService) MuteRule(user *rocket.User, rule *rocket.Rule) error {
+	query, err := service.db.Prepare(`
+		INSERT INTO user_rule_mutes (user_id, rule_id)
+		VALUES (?, ?)
+	`)
+
+	if err != nil {
+		return fmt.Errorf("prepare query: %v", err)
+	}
+
+	_, err = query.Exec(user.ID, rule.ID)
+	if err != nil {
+		return fmt.Errorf("exec query: %v", err)
+	}
+	return nil
+}
+
+func (service *userService) UnMuteRule(user *rocket.User, rule *rocket.Rule) error {
+	query, err := service.db.Prepare(`
+		DELETE FROM user_rule_mutes
+		WHERE user_id=?
+		AND rule_id=?
+		`)
+
+	if err != nil {
+		return fmt.Errorf("prepare query: %v", err)
+	}
+
+	_, err = query.Exec(user.ID, rule.ID)
+	if err != nil {
+		return fmt.Errorf("exec query: %v", err)
+	}
+	return nil
+}
