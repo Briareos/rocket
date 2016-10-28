@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Briareos/rocket"
-	"strconv"
-	"strings"
 )
 
 type userService struct {
@@ -37,6 +35,11 @@ func (service *userService) Get(userID int) (*rocket.User, error) {
 	user.Statuses, err = service.selectStatusesQuery(userID)
 	if err != nil {
 		return nil, fmt.Errorf("select statuses: %v", err)
+	}
+
+	user.MutedRules, err = service.selectMutedRulesQuery(userID)
+	if err != nil {
+		return nil, fmt.Errorf("select muted rules: %v", err)
 	}
 
 	return user, nil
@@ -99,28 +102,16 @@ func (service *userService) selectGroupsQuery(userID int, relation string) ([]*r
 		return nil, fmt.Errorf("next row: %v", err)
 	}
 
-	if err := service.selectRulesQuery(userID, groups); err != nil {
-		return nil, fmt.Errorf("select rules: %v", err)
-	}
-
 	return groups, nil
 }
 
-func (service *userService) selectRulesQuery(userID int, groups []*rocket.Group) error {
-	groupIds := []string{}
-	indexedGroups := map[int]*rocket.Group{}
-
-	for _, group := range groups {
-		groupIds = append(groupIds, strconv.Itoa(group.ID))
-		indexedGroups[group.ID] = group
-	}
-
-	rulesQuery, err := service.db.Prepare(fmt.Sprintf(`
-		SELECT group_id, id, description, threshold, operation, aggregate
+func (service *userService) selectMutedRulesQuery(userID int) ([]*rocket.Rule, error) {
+	rulesQuery, err := service.db.Prepare(`
+		SELECT id, description, threshold, operation, aggregate
 		FROM rules
 		LEFT JOIN user_rule_mutes ON user_rule_mutes.rule_id = rules.id
-		WHERE user_id != ? AND rules.group_id IN (%s)
-	`, strings.Join(groupIds, ", ")))
+		WHERE user_id = ?
+	`)
 	if err != nil {
 		return fmt.Errorf("prepare query: %v", err)
 	}
@@ -130,29 +121,28 @@ func (service *userService) selectRulesQuery(userID int, groups []*rocket.Group)
 		return fmt.Errorf("execute query: %v", err)
 	}
 
+	rules := []*rocket.Rule{}
+
 	for {
 		if hasNext := rows.Next(); !hasNext {
-			if err := rows.Err(); err != nil {
-				return fmt.Errorf("next row: %v", err)
-			}
-
-			return nil
+			break
 		}
 
-		var groupId int
 		rule := rocket.Rule{}
 
-		err = rows.Scan(&groupId, &(rule.ID), &(rule.Description), &(rule.Threshold), &(rule.Operation), &(rule.Type))
+		err = rows.Scan(&(rule.ID), &(rule.Description), &(rule.Threshold), &(rule.Operation), &(rule.Type))
 		if err != nil {
 			return fmt.Errorf("scan row: %v", err)
 		}
 
-		if group, ok := indexedGroups[groupId]; ok {
-			group.Rules = append(group.Rules, &rule)
-		}
+		rules = append(rules, &rule)
 	}
 
-	return nil
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("next row: %v", err)
+	}
+
+	return rules, nil
 }
 
 func (service *userService) selectStatusesQuery(userID int) ([]*rocket.Status, error) {

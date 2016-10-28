@@ -27,6 +27,7 @@ type User struct {
 	JoinedGroups  []*Group  `json:"joined_groups"`
 	WatchedGroups []*Group  `json:"watched_groups"`
 	Statuses      []*Status `json:"statuses"`
+	MutedRules    []*Rule   `json:"muted_rules"`
 }
 
 type UserService interface {

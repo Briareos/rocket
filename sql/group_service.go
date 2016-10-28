@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Briareos/rocket"
+	"strconv"
+	"strings"
 )
 
 type groupService struct {
@@ -26,11 +28,7 @@ func (service groupService) GetAll() ([]*rocket.Group, error) {
 
 	for {
 		if hasNext := rows.Next(); !hasNext {
-			if err := rows.Err(); err != nil {
-				return nil, fmt.Errorf("next row: %v", err)
-			}
-
-			return groups, nil
+			break
 		}
 
 		group := rocket.Group{
@@ -43,6 +41,14 @@ func (service groupService) GetAll() ([]*rocket.Group, error) {
 		}
 
 		groups = append(groups, &group)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("next row: %v", err)
+	}
+
+	if err := service.selectRulesQuery(groups); err != nil {
+		return nil, fmt.Errorf("select rules: %v", err)
 	}
 
 	return groups, nil
@@ -77,5 +83,54 @@ func (service groupService) AddRule(group *rocket.Group, rule *rocket.Rule) erro
 	if err != nil {
 		return fmt.Errorf("exec query: %v", err)
 	}
+	return nil
+}
+
+func (service *groupService) selectRulesQuery(groups []*rocket.Group) error {
+	groupIds := []string{}
+	indexedGroups := map[int]*rocket.Group{}
+
+	for _, group := range groups {
+		groupIds = append(groupIds, strconv.Itoa(group.ID))
+		indexedGroups[group.ID] = group
+	}
+
+	rulesQuery, err := service.db.Prepare(fmt.Sprintf(`
+		SELECT group_id, id, description, threshold, operation, aggregate
+		FROM rules
+		LEFT JOIN user_rule_mutes ON user_rule_mutes.rule_id = rules.id
+		WHERE rules.group_id IN (%s)
+	`, strings.Join(groupIds, ", ")))
+	if err != nil {
+		return fmt.Errorf("prepare query: %v", err)
+	}
+
+	rows, err := rulesQuery.Query()
+	if err != nil {
+		return fmt.Errorf("execute query: %v", err)
+	}
+
+	for {
+		if hasNext := rows.Next(); !hasNext {
+			if err := rows.Err(); err != nil {
+				return fmt.Errorf("next row: %v", err)
+			}
+
+			return nil
+		}
+
+		var groupId int
+		rule := rocket.Rule{}
+
+		err = rows.Scan(&groupId, &(rule.ID), &(rule.Description), &(rule.Threshold), &(rule.Operation), &(rule.Type))
+		if err != nil {
+			return fmt.Errorf("scan row: %v", err)
+		}
+
+		if group, ok := indexedGroups[groupId]; ok {
+			group.Rules = append(group.Rules, &rule)
+		}
+	}
+
 	return nil
 }
