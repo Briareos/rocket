@@ -3,3 +3,4 @@
 /client/node_modules/
 /client/npm-debug.log
 /build/
+config-prod.yml

@@ -105,7 +105,7 @@ func (c *Container) MustWarmUp() {
 
 func (c *Container) DB() *sql.DB {
 	return c.once.Do("DB", func() interface{} {
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@%s/%s", c.conf.DBUser, c.conf.DBPassword, c.conf.DBHost, c.conf.DBName))
+		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@(%s)/%s?parseTime=true", c.conf.DBUser, c.conf.DBPassword, c.conf.DBHost, c.conf.DBName))
 		if err != nil {
 			panic(errors.New(`container: failed to connect to mysql server`))
 		}
