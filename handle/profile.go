@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Briareos/rocket"
 	"net/http"
+	"github.com/Briareos/rocket/request"
 )
 
 type ProfileUser struct {
@@ -23,10 +24,9 @@ type ProfileResponse struct {
 
 func Profile(userService rocket.UserService, groupService rocket.GroupService) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//TODO: Losmi povezi sa sesijom
-		user, err := userService.Get(1)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		user := request.GetToken(r).User()
+		if user == nil {
+			http.Error(w, "you must log in first", http.StatusForbidden)
 			return
 		}
 
