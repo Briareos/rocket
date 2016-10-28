@@ -2,13 +2,13 @@ package handle
 
 import (
 	"net/http"
-	"strings"
 	"path"
+	"strings"
 )
 
 const (
-buildDir  = "build/"
-indexFile = "index.html"
+	buildDir  = "build/"
+	indexFile = "index.html"
 )
 
 func Index() http.HandlerFunc {
