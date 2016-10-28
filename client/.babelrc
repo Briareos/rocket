@@ -1,4 +1,4 @@
 {
     "presets": ["es2015", "react", "react-hmre"],
-    "plugins": ["transform-object-rest-spread"]
+    "plugins": ["transform-object-rest-spread", "transform-object-assign"]
 }

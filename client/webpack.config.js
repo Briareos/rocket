@@ -2,10 +2,12 @@
 var webpack = require('webpack');
 var path = require('path');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
     entry: [
-        './src/index.jsx'
+        './src/index.jsx',
+        './src/style/rocket.scss'
     ],
     output: {
         path: path.join(__dirname, 'dist'),
@@ -13,7 +15,7 @@ module.exports = {
         filename: 'application.js'
     },
     resolve: {
-        extensions: ['', '.js', '.jsx']
+        extensions: ['', '.js', '.jsx', '.scss']
     },
     module: {
         loaders: [
@@ -24,6 +26,10 @@ module.exports = {
                 query: {
                     presets: ['es2015', 'react']
                 }
+            },
+            {
+                test: /\.scss$/,
+                loader: ExtractTextPlugin.extract("style", "css!sass")
             }
         ]
     },
@@ -39,6 +45,7 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/index.html'
-        })
+        }),
+        new ExtractTextPlugin("rocket.css")
     ]
 };
