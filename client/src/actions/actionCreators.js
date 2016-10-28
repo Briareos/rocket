@@ -114,5 +114,42 @@ function createGroupFailure(message) {
     }
 }
 
+export function joinGroup(groupID) {
+    return dispatch => {
+        dispatch(joinGroupStarted());
+        Api.post('groupAction', {
+            type: 'join',
+            groupID: groupID,
+        }).then(
+            response => {
+                dispatch(joinGroupSuccess(groupID));
+            },
+            error => {
+                dispatch(joinGroupFailure(error));
+            }
+        )
+    }
+}
+
+function joinGroupStarted() {
+    return {
+        type: action.JOIN_GROUP,
+    }
+}
+
+function joinGroupSuccess(groupID) {
+    return {
+        type: action.JOIN_GROUP_SUCCESS,
+        groupID,
+    }
+}
+
+function joinGroupFailure(message) {
+    return {
+        type: action.JOIN_GROUP_FAILURE,
+        message,
+    }
+}
+
 
 //ruleCreate, groupAction, ruleAction (primaju type)
