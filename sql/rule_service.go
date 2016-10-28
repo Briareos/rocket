@@ -8,11 +8,13 @@ import (
 
 type ruleService struct {
 	db *sql.DB
+	groupService rocket.GroupService
 }
 
-func NewRuleService(db *sql.DB) *ruleService {
+func NewRuleService(db *sql.DB, groupService rocket.GroupService) *ruleService {
 	return &ruleService{
 		db: db,
+		groupService: groupService,
 	}
 }
 
@@ -33,4 +35,5 @@ func (service *ruleService) Get(ruleID int) (*rocket.Rule, error) {
 
 	return &rule, nil
 }
+
 

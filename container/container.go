@@ -129,7 +129,7 @@ func (c *Container) GroupService() rocket.GroupService {
 
 func (c *Container) RuleService() rocket.RuleService {
 	return c.once.Do("RuleService", func() interface{} {
-		return oursql.NewRuleService(c.DB())
+		return oursql.NewRuleService(c.DB(), c.GroupService())
 	}).(rocket.RuleService)
 }
 

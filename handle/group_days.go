@@ -66,6 +66,7 @@ func GroupDays(groupService rocket.GroupService) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		groupDays.Group = *group
 
 		totalBodyCount, err := groupService.GetTotalBodyCount(group)
 		if err != nil {
@@ -100,6 +101,30 @@ func GroupDays(groupService rocket.GroupService) http.HandlerFunc {
 			})
 		}
 
+		rules, err := groupService.GetRules(group)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		for index, day := range groupDays.Days {
+			var activeRules []rocket.Rule
+
+			for _, rule := range rules {
+				isTriggered, err := groupService.IsTriggered(rule, day.Date)
+				fmt.Printf("%v", isTriggered)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				if isTriggered {
+					activeRules = append(activeRules, *rule)
+				}
+			}
+
+			groupDays.Days[index].ActiveRules = activeRules
+
+		}
 		data, err := json.Marshal(groupDays)
 
 		if err != nil {
