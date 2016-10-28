@@ -6,6 +6,14 @@ export default function (state = [], action) {
             return [...action.groups];
         case actions.CREATE_GROUP:
             return [...state, action.group];
+        case actions.CREATE_RULE:
+            return [...state].map(group => {
+                if (group.id == action.groupID) {
+                    group.rules = [...group.rules, action.rule];
+                }
+
+                return group;
+            });
         default:
             return state;
     }

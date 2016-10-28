@@ -226,7 +226,6 @@ function watchGroupFailure(message) {
     }
 }
 
-
 export function unwatchGroup(groupID) {
     return dispatch => {
         dispatch(unwatchGroupStarted());
@@ -246,20 +245,137 @@ export function unwatchGroup(groupID) {
 
 function unwatchGroupStarted() {
     return {
-        type: action.WATCH_GROUP,
+        type: action.UNWATCH_GROUP,
     }
 }
 
 function unwatchGroupSuccess(groupID) {
     return {
-        type: action.WATCH_GROUP_SUCCESS,
+        type: action.UNWATCH_GROUP_SUCCESS,
         groupID,
     }
 }
 
 function unwatchGroupFailure(message) {
     return {
-        type: action.WATCH_GROUP_FAILURE,
+        type: action.UNWATCH_GROUP_FAILURE,
+        message,
+    }
+}
+
+export function createRule(groupID, description, type, operation, threshold) {
+    return dispatch => {
+        dispatch(createRuleStarted());
+        return Api.post('createRule', {
+            groupID,
+            rule: {
+                description,
+                type,
+                operation,
+                threshold,
+            }
+        }).then(
+            response => {
+                dispatch(createRuleSuccess(groupID, response.data.rule));
+            },
+            error => {
+                dispatch(createRuleFailure(error));
+            }
+        )
+    }
+}
+
+function createRuleStarted() {
+    return {
+        type: action.CREATE_RULE,
+    }
+}
+
+function createRuleSuccess(groupID, rule) {
+    return {
+        type: action.CREATE_RULE_SUCCESS,
+        groupID,
+        rule,
+    }
+}
+
+function createRuleFailure(message) {
+    return {
+        type: action.CREATE_RULE_FAILURE,
+        message,
+    }
+}
+
+export function muteRule(ruleID) {
+    return dispatch => {
+        dispatch(muteRuleStarted());
+        return Api.post('ruleAction', {
+            type: "mute",
+            ruleID,
+        }).then(
+            () => {
+                dispatch(muteRuleSuccess(ruleID));
+            },
+            error => {
+                dispatch(muteRuleFailure(error));
+            }
+        )
+    }
+}
+
+function muteRuleStarted() {
+    return {
+        type: action.MUTE_RULE,
+    }
+}
+
+function muteRuleSuccess(ruleID) {
+    return {
+        type: action.MUTE_RULE_SUCCESS,
+        ruleID,
+    }
+}
+
+function muteRuleFailure(message) {
+    return {
+        type: action.MUTE_RULE_FAILURE,
+        message,
+    }
+}
+
+export function unmuteRule(ruleID) {
+    return dispatch => {
+        dispatch(unmuteRuleStarted());
+        return Api.post('ruleAction', {
+            type: "unmute",
+            ruleID,
+        }).then(
+            () => {
+                dispatch(unmuteRuleSuccess(ruleID));
+            },
+            error => {
+                dispatch(unmuteRuleFailure(error));
+            }
+        )
+    }
+}
+
+function unmuteRuleStarted() {
+    return {
+        type: action.UNMUTE_RULE,
+    }
+}
+
+function unmuteRuleSuccess(ruleID) {
+    return {
+        type: action.UNMUTE_RULE_SUCCESS,
+        ruleID,
+    }
+}
+
+function unmuteRuleFailure(message) {
+    return {
+        type: action.UNMUTE_RULE_FAILURE,
         message,
     }
 }

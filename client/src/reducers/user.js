@@ -32,6 +32,14 @@ export default function (state = {
             return Object.assign({}, state, {
                 watched_groups: [...state.watched_groups].filter(groupID => groupID != action.groupID),
             });
+        case actions.MUTE_RULE_SUCCESS:
+            return Object.assign({}, state, {
+                muted_rules: [...state.muted_rules, action.ruleID],
+            });
+        case actions.UNMUTE_RULE_SUCCESS:
+            return Object.assign({}, state, {
+                muted_rules: [...state.muted_rules].filter(ruleID => ruleID != action.ruleID),
+            });
         default:
             return state;
     }
