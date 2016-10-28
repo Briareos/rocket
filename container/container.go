@@ -162,6 +162,7 @@ func (c *Container) HTTPHandler() *http.ServeMux {
 		http.HandleFunc("/api/groupAction", c.makeHandle(handle.GroupAction(c.UserService(), c.GroupService())))
 
 		http.HandleFunc("/api/ruleCreate", c.makeHandle(handle.RuleCreate(c.GroupService())))
+		http.HandleFunc("/api/ruleAction", c.makeHandle(handle.RuleAction(c.UserService(), c.GroupService())))
 
 		http.HandleFunc("/", c.makeHandle(handle.Index()))
 		return http.DefaultServeMux
