@@ -11,19 +11,21 @@ import (
 	"github.com/Briareos/rocket/sql"
 )
 
-type profileResponse struct {
-	user struct {
-		rocket.User
-		joinedGroups  []int       `json:"joined_groups"`
-		watchedGroups []int       `json:"watched_groups"`
-		mutedRules    []int       `json:"muted_rules"`
-		active_rules  map[int]int `json:"active_rules"` //Map for each group (key) how many alerts are active (value)
-	} `json:"user"`
-	groups []rocket.Group `json:"groups"`
-	users  []rocket.User  `json:"users"`
+type ProfileUser struct {
+	*rocket.User
+	JoinedGroups  []int       `json:"joined_groups"`
+	WatchedGroups []int       `json:"watched_groups"`
+	MutedRules    []int       `json:"muted_rules"`
+	ActiveRules   map[int]int `json:"active_rules"` //Map for each group (key) how many alerts are active (value)
 }
 
-func makeProfileFunc(userService rocket.UserService) http.Handler {
+type profileResponse struct {
+	User   ProfileUser     `json:"user"`
+	Groups []*rocket.Group `json:"groups"`
+	Users  []*rocket.User  `json:"users"`
+}
+
+func makeProfileFunc(userService rocket.UserService, groupService rocket.GroupService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := userService.Get(1)
 		if err != nil {
@@ -31,7 +33,46 @@ func makeProfileFunc(userService rocket.UserService) http.Handler {
 			return
 		}
 
-		data, err := json.Marshal(user)
+		joinedGroups := []int{}
+		watchedGroups := []int{}
+		mutedRules := []int{}
+
+		for _, group := range user.JoinedGroups {
+			joinedGroups = append(joinedGroups, group.ID)
+		}
+		for _, group := range user.WatchedGroups {
+			watchedGroups = append(watchedGroups, group.ID)
+		}
+		for _, rule := range user.MutedRules {
+			mutedRules = append(mutedRules, rule.ID)
+		}
+
+		allUsers, err := userService.GetAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		allGroups, err := groupService.GetAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		responseData := profileResponse{
+			User: ProfileUser{
+				User:          user,
+				JoinedGroups:  joinedGroups,
+				WatchedGroups: watchedGroups,
+				MutedRules:    mutedRules,
+			},
+			Groups: allGroups,
+			Users:  allUsers,
+		}
+
+		fmt.Printf("%#v\n", responseData)
+
+		data, err := json.Marshal(responseData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -53,8 +94,9 @@ func main() {
 	c.MustWarmUp()
 
 	userService := sql.NewUserService(c.DB())
+	groupService := sql.NewGroupService(c.DB())
 
-	c.HTTPHandler().Handle("/api/v1/profile", makeProfileFunc(userService))
+	c.HTTPHandler().Handle("/api/v1/profile", makeProfileFunc(userService, groupService))
 	c.HTTPHandler().Handle("/api/v1/groupDays", makeGroupDays())
 
 	c.HTTPServer().ListenAndServe()

@@ -45,6 +45,19 @@ func (service *userService) Get(userID int) (*rocket.User, error) {
 	return user, nil
 }
 
+func (service *userService) GetAll() ([]*rocket.User, error) {
+	users, err := service.selectAllUsersQuery()
+	if err != nil {
+		return nil, fmt.Errorf("select all users: %v", err)
+	}
+
+	return users, nil
+}
+
+func (service *userService) Add(user *rocket.User) error {
+	return nil
+}
+
 func (service *userService) selectUserQuery(userID int) (*rocket.User, error) {
 	userQuery, err := service.db.Prepare(`SELECT google_account_id, first_name, last_name, title, email FROM users WHERE id=?`)
 	if err != nil {
@@ -61,6 +74,44 @@ func (service *userService) selectUserQuery(userID int) (*rocket.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (service *userService) selectAllUsersQuery() ([]*rocket.User, error) {
+	usersQuery, err := service.db.Prepare(`
+		SELECT id, google_account_id, first_name, last_name, title, email
+		FROM users
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("prepare query: %v", err)
+	}
+
+	users := []*rocket.User{}
+
+	rows, err := usersQuery.Query()
+	if err != nil {
+		return nil, fmt.Errorf("execute query: %v", err)
+	}
+
+	for {
+		if hasNext := rows.Next(); !hasNext {
+			break
+		}
+
+		user := rocket.User{}
+
+		err = rows.Scan(&(user.ID), &(user.GoogleID), &(user.FirstName), &(user.LastName), &(user.Title), &(user.Email))
+		if err != nil {
+			return nil, fmt.Errorf("scan row: %v", err)
+		}
+
+		users = append(users, &user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("next row: %v", err)
+	}
+
+	return users, nil
 }
 
 func (service *userService) selectGroupsQuery(userID int, relation string) ([]*rocket.Group, error) {
@@ -113,12 +164,12 @@ func (service *userService) selectMutedRulesQuery(userID int) ([]*rocket.Rule, e
 		WHERE user_id = ?
 	`)
 	if err != nil {
-		return fmt.Errorf("prepare query: %v", err)
+		return nil, fmt.Errorf("prepare query: %v", err)
 	}
 
 	rows, err := rulesQuery.Query(userID)
 	if err != nil {
-		return fmt.Errorf("execute query: %v", err)
+		return nil, fmt.Errorf("execute query: %v", err)
 	}
 
 	rules := []*rocket.Rule{}
@@ -132,14 +183,14 @@ func (service *userService) selectMutedRulesQuery(userID int) ([]*rocket.Rule, e
 
 		err = rows.Scan(&(rule.ID), &(rule.Description), &(rule.Threshold), &(rule.Operation), &(rule.Type))
 		if err != nil {
-			return fmt.Errorf("scan row: %v", err)
+			return nil, fmt.Errorf("scan row: %v", err)
 		}
 
 		rules = append(rules, &rule)
 	}
 
 	if err := rows.Err(); err != nil {
-		return fmt.Errorf("next row: %v", err)
+		return nil, fmt.Errorf("next row: %v", err)
 	}
 
 	return rules, nil

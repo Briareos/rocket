@@ -24,22 +24,23 @@ type User struct {
 	LastName  string `json:"last_name"`
 	Title     string `json:"title"`
 
-	JoinedGroups  []*Group  `json:"joined_groups"`
-	WatchedGroups []*Group  `json:"watched_groups"`
-	Statuses      []*Status `json:"statuses"`
-	MutedRules    []*Rule   `json:"muted_rules"`
+	JoinedGroups  []*Group  // indexed
+	WatchedGroups []*Group  // indexed
+	Statuses      []*Status `json:"statuses,omitempty"`
+	MutedRules    []*Rule   // indexed
 }
 
 type UserService interface {
 	Get(int) (*User, error)
+	GetAll() ([]*User, error)
 	Add(*User) error
 
-	JoinGroup(*User, *Group) error
-	LeaveGroup(*User, *Group) error
-
-	WatchGroup(*User, *Group) error
-	UnWatchGroup(*User, *Group) error
-
-	MuteRule(*User, *Rule) error
-	UnMuteRule(*User, *Rule) error
+	//JoinGroup(*User, *Group) error
+	//LeaveGroup(*User, *Group) error
+	//
+	//WatchGroup(*User, *Group) error
+	//UnWatchGroup(*User, *Group) error
+	//
+	//MuteRule(*User, *Rule) error
+	//UnMuteRule(*User, *Rule) error
 }
