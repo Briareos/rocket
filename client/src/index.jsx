@@ -5,6 +5,7 @@ import {Provider} from "react-redux";
 import routes from "./routes";
 import configureStore from "./store/StoreConfiguration";
 import {getProfile, getGroupDays} from "./actions/actionCreators";
+import Api from './utils/Api';
 
 const renderApplication = (initialStore) => {
     const store = configureStore(initialStore);
@@ -19,4 +20,7 @@ const renderApplication = (initialStore) => {
     );
 };
 
-renderApplication();
+Api.get('profile').then(response => {
+    let initialState = response.data;
+    renderApplication(initialState);
+});
