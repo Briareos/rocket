@@ -7,7 +7,7 @@ import CreateGroupPage from '../Components/CreateGroup/CreateGroupPage';
 
 export default (
     <Route path="/" component={App}>
-        <Route path="group/:id" component={GroupPage}/>
         <Route path="group/create" component={CreateGroupPage}/>
+        <Route path="group/:id" component={GroupPage}/>
     </Route>
 )

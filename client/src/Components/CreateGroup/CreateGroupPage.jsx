@@ -10,8 +10,8 @@ class GroupPage extends Component {
     }
     render() {
         return (
-            <div id="group-page" className="page" >
-                create group page
+            <div id="group-page" className="page">
+                <GroupNameInput groups={this.props.groups} onEnter={}/>
             </div>
         );
     }
