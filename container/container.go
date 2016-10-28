@@ -1,23 +1,31 @@
 package container
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"github.com/Briareos/rocket/handle"
+	"github.com/Briareos/rocket/request"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/sessions"
 	"github.com/jinzhu/configor"
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"reflect"
-	"github.com/Briareos/rocket/handle"
+	"net"
+	"strings"
 )
 
 type Config struct {
-	DBUser     string `yaml:"db_user"`
-	DBPassword string `yaml:"db_password"`
-	DBHost     string `yaml:"db_host"`
-	DBName     string `yaml:"db_name"`
-	HTTPAddr   string `yaml:"http_addr"`
+	DBUser            string `yaml:"db_user"`
+	DBPassword        string `yaml:"db_password"`
+	DBHost            string `yaml:"db_host"`
+	DBName            string `yaml:"db_name"`
+	HTTPAddr          string `yaml:"http_addr"`
+	GoogleOAuthID     string `yaml:"google_oauth_id"`
+	GoogleOAuthSecret string `yaml:"google_oauth_secret"`
+	Secret            string `yaml:"secret"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -105,11 +113,53 @@ func (c *Container) DB() *sql.DB {
 	}).(*sql.DB)
 }
 
+func (c *Container) HomeURL() string {
+	return c.once.Do("HomeURL", func() interface{} {
+		host, port, err := net.SplitHostPort(c.conf.HTTPAddr)
+		if err != nil {
+			panic(errors.Wrap(err, `container: failed to parse HTTP address`))
+		}
+		if host == "" {
+			host = "localhost"
+		}
+		proto := "http://"
+		if port == "http" {
+			port = ""
+		} else if port == "https" {
+			proto = "https://"
+			port = ""
+		} else if port != "" {
+			port = ":" + port
+		}
+		return strings.TrimRight(proto + host + port, "/")
+	}).(string)
+}
+
 func (c *Container) HTTPHandler() *http.ServeMux {
 	return c.once.Do("HTTPHandler", func() interface{} {
-		http.HandleFunc("/", handle.Index())
+		http.HandleFunc("/oauth/google/callback", c.makeHandle(handle.GoogleOAuthCallback()))
+		http.HandleFunc("/oauth/google", c.makeHandle(handle.GoogleOAuth(c.conf.GoogleOAuthID, c.HomeURL() + "/oauth/google/callback")))
+		http.HandleFunc("/api/current-user", c.makeHandle(handle.CurrentUser()))
+		http.HandleFunc("/", c.makeHandle(handle.Index()))
 		return http.DefaultServeMux
 	}).(*http.ServeMux)
+}
+
+func (c *Container) makeHandle(h http.HandlerFunc) http.HandlerFunc {
+	return c.injectToken(h)
+}
+
+func (c *Container) injectToken(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tok, err := c.Session().Get(r, "session")
+		if err != nil {
+			http.Error(w, "Invalid session provided", 500)
+			return
+		}
+		r = r.WithContext(context.WithValue(r.Context(), request.Token, tok))
+		h(w, r)
+		tok.Store()
+	}
 }
 
 func (c *Container) HTTPServer() *http.Server {
@@ -120,4 +170,10 @@ func (c *Container) HTTPServer() *http.Server {
 		}
 		return srv
 	}).(*http.Server)
+}
+
+func (c *Container) Session() *sessions.CookieStore {
+	return c.once.Do("Session", func() interface{} {
+		return sessions.NewCookieStore([]byte("something-very-secret"))
+	}).(*sessions.CookieStore)
 }

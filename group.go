@@ -18,8 +18,6 @@ type Group struct {
 	ID           int             `json:"id"`
 	Name         string          `json:"name"`
 	Description  string          `json:"description"`
-	BusyValue    bool            `json:"busy_value"`
-	RemoteValue  bool            `json:"remote_value"`
 	Availability AvailabilityMap `json:"availability"`
 
 	Rules []*Rule `json:"rules"`
