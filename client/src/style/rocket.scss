@@ -11,4 +11,30 @@ body {
   flex: 1 1 0;
   flex-direction: column;
   z-index: 1000;
+
+  .application-wrapper {
+    flex: 1 1 0;
+    flex-direction: row;
+    display: flex;
+  }
+  .main-container {
+    flex: 1 1 0;
+    flex-direction: column;
+
+    .content-wrapper {
+      flex: 1 1 0;
+      display: flex;
+
+      .page {
+        flex: 1 1 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      .flex-page {
+        flex: 1 1 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+    }
+  }
 }
