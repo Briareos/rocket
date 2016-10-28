@@ -15,14 +15,21 @@ const renderApplication = (initialState) => {
         </Provider>,
         document.getElementById('rocket-application')
     );
-    document.getElementById('loading-state').className = "loading-state hide"
+    document.getElementById('loading-state').className = "loading-state hide";
 };
 
-let loginURL = "/login";
+const renderLoginApp = (loginUrl) => {
+    render(
+        <LoginApp loginUrl={loginUrl}/>,
+        document.getElementById('rocket-application')
+    );
+    document.getElementById('loading-state').className = "loading-state hide";
+};
 
 Api.get('profile').then(response => {
-    if (response.data.error === "not_logged_in" && window.location.pathname != loginURL) {
-        window.location.pathname = loginURL;
+    if (response.data.error === "not_logged_in") {
+        // window.location.pathname = browserHistory.push('login');
+        renderLoginApp();
         return;
     }
     let initialState = response.data;
