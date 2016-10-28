@@ -5,10 +5,11 @@ import {Provider} from "react-redux";
 import routes from "./routes";
 import configureStore from "./store/StoreConfiguration";
 import Api from "./utils/Api";
+import {getGroupDays} from "./actions/actionCreators";
 
 const renderApplication = (initialState) => {
     const store = configureStore(initialState);
-
+    store.dispatch(getGroupDays(1, 10, 2016)).then(() => console.log("Loaded"));
     render(
         <Provider store={store}>
             <Router history={browserHistory} routes={routes}/>
