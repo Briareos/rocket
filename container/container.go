@@ -156,7 +156,10 @@ func (c *Container) HTTPHandler() *http.ServeMux {
 		http.HandleFunc("/oauth/google", c.makeHandle(handle.GoogleOAuth(c.conf.GoogleOAuthID, redirectURI)))
 		http.HandleFunc("/api/current-user", c.makeHandle(handle.CurrentUser()))
 		http.HandleFunc("/api/profile", c.makeHandle(handle.Profile(c.UserService(), c.GroupService())))
+
 		http.HandleFunc("/api/groupDays", c.makeHandle(handle.GroupDays(c.GroupService())))
+		http.HandleFunc("/api/groupCreate", c.makeHandle(handle.GroupCreate(c.GroupService())))
+
 		http.HandleFunc("/", c.makeHandle(handle.Index()))
 		return http.DefaultServeMux
 	}).(*http.ServeMux)
