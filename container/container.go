@@ -162,7 +162,7 @@ func (c *Container) HTTPHandler() *http.ServeMux {
 }
 
 func (c *Container) makeHandle(h http.HandlerFunc) http.HandlerFunc {
-	return c.injectToken(h)
+	return c.enableCORS(c.injectToken(h))
 }
 
 func (c *Container) injectToken(h http.HandlerFunc) http.HandlerFunc {
@@ -177,6 +177,13 @@ func (c *Container) injectToken(h http.HandlerFunc) http.HandlerFunc {
 		r = r.WithContext(context.WithValue(r.Context(), request.Token, tok))
 		h(w, r)
 		session.Store()
+	}
+}
+
+func (c *Container) enableCORS(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		h(w, r)
 	}
 }
 
