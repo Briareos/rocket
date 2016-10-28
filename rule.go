@@ -18,3 +18,7 @@ type Rule struct {
 	Operation   string `json:"operation"`
 	Threshold   int    `json:"threshold"`
 }
+
+type RuleService interface {
+	Get(int) (*Rule, error)
+}

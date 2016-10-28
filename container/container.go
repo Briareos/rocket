@@ -127,6 +127,12 @@ func (c *Container) GroupService() rocket.GroupService {
 	}).(rocket.GroupService)
 }
 
+func (c *Container) RuleService() rocket.RuleService {
+	return c.once.Do("RuleService", func() interface{} {
+		return oursql.NewRuleService(c.DB())
+	}).(rocket.RuleService)
+}
+
 func (c *Container) HomeURL() string {
 	return c.once.Do("HomeURL", func() interface{} {
 		host, port, err := net.SplitHostPort(c.conf.HTTPAddr)
@@ -162,7 +168,7 @@ func (c *Container) HTTPHandler() *http.ServeMux {
 		http.HandleFunc("/api/groupAction", c.makeHandle(handle.GroupAction(c.UserService(), c.GroupService())))
 
 		http.HandleFunc("/api/ruleCreate", c.makeHandle(handle.RuleCreate(c.GroupService())))
-		http.HandleFunc("/api/ruleAction", c.makeHandle(handle.RuleAction(c.UserService())))
+		http.HandleFunc("/api/ruleAction", c.makeHandle(handle.RuleAction(c.RuleService(), c.UserService())))
 
 		http.HandleFunc("/", c.makeHandle(handle.Index()))
 		return http.DefaultServeMux

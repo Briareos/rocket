@@ -18,8 +18,9 @@ type RuleActionRequest struct {
 	Type   RuleActionType `json:"type"`
 }
 
-func RuleAction(userService rocket.UserService) http.HandlerFunc {
+func RuleAction(ruleService rocket.RuleService, userService rocket.UserService) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		if r.Method != http.MethodPost {
 			http.Error(w, "Only POST is allowed", http.StatusMethodNotAllowed)
 			return
@@ -37,26 +38,33 @@ func RuleAction(userService rocket.UserService) http.HandlerFunc {
 		defer r.Body.Close()
 
 		// TODO: Losmi spoji sa sesijom
-		//user, err := userService.Get(1)
-		//if err != nil {
-		//	http.Error(w, err.Error(), http.StatusInternalServerError)
-		//	return
-		//}
-		//
-		//if requestBody.Type == Mute {
-		//	err := userService.MuteRule(user, requestBody.RuleID)
-		//	if err != nil {
-		//		http.Error(w, err.Error(), http.StatusInternalServerError)
-		//		return
-		//	}
-		//}
-		//
-		//if requestBody.Type == UnMute {
-		//	err := userService.UnMuteRule(user, requestBody.RuleID)
-		//	if err != nil {
-		//		http.Error(w, err.Error(), http.StatusInternalServerError)
-		//		return
-		//	}
-		//}
+		user, err := userService.Get(1)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rule, err := ruleService.Get(requestBody.RuleID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if requestBody.Type == Mute {
+			err := userService.MuteRule(user, rule)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		if requestBody.Type == UnMute {
+			err := userService.UnMuteRule(user, rule)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
 	})
 }
