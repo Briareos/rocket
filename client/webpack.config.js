@@ -38,7 +38,7 @@ module.exports = {
                 "target": {
                     "host": "api.rocket.dev",
                     "protocol": 'http:',
-                    "port": 80
+                    "port": 8000
                 },
                 ignorePath: true,
                 changeOrigin: true,
