@@ -6,6 +6,7 @@ import (
 	"github.com/Briareos/rocket"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type groupService struct {
@@ -133,4 +134,75 @@ func (service *groupService) selectRulesQuery(groups []*rocket.Group) error {
 	}
 
 	return nil
+}
+
+func (service groupService) GetAvailableBodyCounts(group *rocket.Group, day time.Time) (map[time.Time]int, error) {
+	availableStatuses := []string{"'available'"}
+
+	if group.Availability.Busy {
+		availableStatuses = append(availableStatuses, "'busy'")
+	}
+	if group.Availability.Remote {
+		availableStatuses = append(availableStatuses, "'remote'")
+	}
+
+	query, err := service.db.Prepare(fmt.Sprintf(`SELECT statuses.date as date, COUNT(*) as count FROM user_group_assignments
+		JOIN users ON user_group_assignments.user_id=users.id
+		JOIN statuses ON users.id=statuses.user_id
+		WHERE user_group_assignments.group_id=?
+		AND statuses.type IN(%s)
+		AND YEAR(statuses.date)=?
+		AND MONTH(statuses.date)=?
+		GROUP BY statuses.date`,
+		strings.Join(availableStatuses, ",")))
+
+	counts := make(map[time.Time]int)
+
+	if err != nil {
+		return counts, fmt.Errorf("prepare query: %v", err)
+	}
+
+	//rows, err := query.Query(group.ID, day.Year(), int(day.Month()))
+	rows, err := query.Query(group.ID, day.Year(), int(day.Month()))
+	if err != nil {
+		return counts, fmt.Errorf("prepare query: %v", err)
+	}
+
+	for {
+		if hasNext := rows.Next(); !hasNext {
+			break
+		}
+
+		var date time.Time
+		var count int
+
+		err = rows.Scan(&date, &count)
+		if err != nil {
+			return nil, fmt.Errorf("scan row: %v", err)
+		}
+
+		counts[date] = count
+	}
+
+	if err != nil {
+		return counts, fmt.Errorf("exec query: %v", err)
+	}
+
+	return counts, nil
+}
+
+func (service groupService) GetTotalBodyCount(group *rocket.Group) (int, error) {
+	query, err := service.db.Prepare(`SELECT COUNT(*) as count FROM user_group_assignments WHERE group_id=?`)
+	if err != nil {
+		return 0, fmt.Errorf("prepare query: %v", err)
+	}
+
+	var count int
+
+	err = query.QueryRow(group.ID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("exec query: %v", err)
+	}
+
+	return count, nil
 }
