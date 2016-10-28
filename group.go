@@ -34,9 +34,17 @@ type GroupService interface {
 	// AddRule creates a Rule and assigns it to the Group
 	AddRule(*Group, *Rule) error
 
-	// GetBodyCount returns the number of available people
+	// GetBodyCount returns the number of available people at specific day
+	GetAvailableBodyCount(*Group, time.Time) (int, error)
+
+	// GetBodyCount returns the number of available people all days in month
 	GetAvailableBodyCounts(*Group, time.Time) (map[time.Time]int, error)
 
 	// GetTotalBodyCount returns the total number of people in group
 	GetTotalBodyCount(*Group) (int, error)
+
+	GetRules(group *Group) ([]*Rule, error)
+
+	IsTriggered(*Rule, time.Time) (bool, error)
 }
+

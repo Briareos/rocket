@@ -13,6 +13,7 @@ const (
 
 type Rule struct {
 	ID          int    `json:"id"`
+	GroupID	    int    `json:"group_id"`
 	Description string `json:"description"`
 	Type        string `json:"type"`
 	Operation   string `json:"operation"`

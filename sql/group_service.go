@@ -144,6 +144,45 @@ func (service *groupService) selectRulesQuery(groups []*rocket.Group) error {
 	return nil
 }
 
+// GetAvailableBodyCount returns only for the given day
+func (service groupService) GetAvailableBodyCount(group *rocket.Group, date time.Time) (int, error) {
+	availableStatuses := []string{"'available'"}
+
+	if group.Availability.Busy {
+		availableStatuses = append(availableStatuses, "'busy'")
+	}
+	if group.Availability.Remote {
+		availableStatuses = append(availableStatuses, "'remote'")
+	}
+
+	query, err := service.db.Prepare(fmt.Sprintf(`
+		SELECT COUNT(*) as count FROM user_group_assignments
+		JOIN users ON user_group_assignments.user_id=users.id
+		JOIN statuses ON users.id=statuses.user_id
+		WHERE user_group_assignments.group_id=?
+		AND statuses.type IN(%s)
+		AND YEAR(statuses.date)=?
+		AND MONTH(statuses.date)=?
+		AND DAY(statuses.date)=?`,
+		strings.Join(availableStatuses, ",")))
+
+
+	var count int
+
+	if err != nil {
+		return count, fmt.Errorf("prepare query: %v", err)
+	}
+
+	err = query.QueryRow(group.ID, date.Year(), int(date.Month()), date.Day()).Scan(&count)
+
+	if err != nil {
+		return count, fmt.Errorf("prepare query: %v", err)
+	}
+
+	return count, nil
+}
+
+// GetAvailableBodyCounts returns for all days of the month of day
 func (service groupService) GetAvailableBodyCounts(group *rocket.Group, day time.Time) (map[time.Time]int, error) {
 	availableStatuses := []string{"'available'"}
 
@@ -232,4 +271,86 @@ func (service groupService) Get(groupID int) (*rocket.Group, error) {
 	}
 
 	return &group, nil
+}
+
+func (service groupService) GetRules(group *rocket.Group) ([]*rocket.Rule, error) {
+	ruleQuery, err := service.db.Prepare(`SELECT id, group_id, description, aggregate, operation, threshold FROM rules WHERE group_id=?`)
+	if err != nil {
+		return nil, fmt.Errorf("prepare query: %v", err)
+	}
+
+	var rules []*rocket.Rule
+
+	rows, err := ruleQuery.Query(group.ID)
+	if err != nil {
+		return nil, fmt.Errorf("execute query: %v", err)
+	}
+
+	for {
+		if hasNext := rows.Next(); !hasNext {
+			break
+		}
+
+		rule := rocket.Rule{}
+
+		err = rows.Scan(&(rule.ID), &(rule.GroupID), &(rule.Description), &(rule.Type), &(rule.Operation), &(rule.Threshold))
+		if err != nil {
+			return nil, fmt.Errorf("scan row: %v", err)
+		}
+
+		rules = append(rules, &rule)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("next row: %v", err)
+	}
+
+
+	if err != nil {
+		return nil, fmt.Errorf("execute query: %v", err)
+	}
+
+	return rules, nil
+}
+
+func (service *groupService) IsTriggered(rule *rocket.Rule, date time.Time) (bool, error) {
+	group, err := service.Get(rule.GroupID)
+
+	availableBodyCount, err := service.GetAvailableBodyCount(group, date)
+	if err != nil {
+		return false, err
+	}
+
+	var compareValue int
+
+	if rule.Type == rocket.RuleTypePercentage {
+		totalBodyCount, err := service.GetTotalBodyCount(group)
+		if err != nil {
+			return false, err
+		}
+
+		compareValue = int(availableBodyCount / totalBodyCount * 100)
+	} else if rule.Type == rocket.RuleTypeCount {
+		compareValue = availableBodyCount
+	}
+
+	switch rule.Operation {
+	case rocket.RuleOperatorLessThan:
+		return compareValue < rule.Threshold, nil
+		break
+	case rocket.RuleOperatorGreaterThan:
+		return compareValue > rule.Threshold, nil
+		break
+	case rocket.RuleOperatorLessThanOrEqual:
+		return compareValue <= rule.Threshold, nil
+		break
+	case rocket.RuleOperatorGreaterThanOrEqual:
+		return compareValue >= rule.Threshold, nil
+		break
+	case rocket.RuleOperatorEqual:
+		return compareValue == rule.Threshold, nil
+		break
+	}
+
+	return false, nil
 }
