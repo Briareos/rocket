@@ -64,10 +64,18 @@ func (service groupService) Add(group *rocket.Group) error {
 		return fmt.Errorf("prepare query: %v", err)
 	}
 
-	_, err = query.Exec(group.Name, group.Description, group.Availability.Busy, group.Availability.Remote)
+	result, err := query.Exec(group.Name, group.Description, group.Availability.Busy, group.Availability.Remote)
 	if err != nil {
 		return fmt.Errorf("exec query: %v", err)
 	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("get last insterted id: %v", err)
+	}
+
+	group.ID = int(id)
+
 	return nil
 }
 

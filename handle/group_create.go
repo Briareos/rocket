@@ -1,17 +1,18 @@
 package handle
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Briareos/rocket"
 	"net/http"
-	"encoding/json"
 )
 
 type GroupCreateRequest struct {
-	Name string `json:"name"`
+	Name        string `json:"name"`
 	Description string `json:"description"`
 
-	BusyValue bool `json:"busyValue"`
-	RemoteValue bool `json:"busyValue"`
+	BusyValue   bool `json:"busyValue"`
+	RemoteValue bool `json:"remoteValue"`
 }
 
 func GroupCreate(groupService rocket.GroupService) http.HandlerFunc {
@@ -34,8 +35,8 @@ func GroupCreate(groupService rocket.GroupService) http.HandlerFunc {
 		defer r.Body.Close()
 
 		group := &rocket.Group{
-			Name: requestBody.Name,
-			Description: requestBody.Description,
+			Name:         requestBody.Name,
+			Description:  requestBody.Description,
 			Availability: rocket.DefaultAvailability,
 		}
 
@@ -48,5 +49,14 @@ func GroupCreate(groupService rocket.GroupService) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		data, err := json.Marshal(group)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Add("Content-Type", "application/json")
+		fmt.Fprint(w, string(data))
 	})
 }
