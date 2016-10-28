@@ -19,6 +19,7 @@ body {
   }
   .main-container {
     flex: 1 1 0;
+    display: flex;
     flex-direction: column;
 
     .content-wrapper {
