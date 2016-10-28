@@ -74,3 +74,45 @@ function getGroupDaysFailure(message) {
         message,
     }
 }
+
+export function createGroup(name, description, busyValue = false, remoteValue = true) {
+    return dispatch => {
+        dispatch(createGroupStarted());
+        Api.post('groupCreate', {
+            name,
+            description,
+            busyValue,
+            remoteValue,
+        }).then(
+            response => {
+                dispatch(createGroupSuccess(response.data));
+            },
+            error => {
+                dispatch(createGroupFailure(error));
+            }
+        )
+    }
+}
+
+function createGroupStarted() {
+    return {
+        type: action.CREATE_GROUP
+    }
+}
+
+function createGroupSuccess(group) {
+    return {
+        type: action.CREATE_GROUP_SUCCESS,
+        group,
+    }
+}
+
+function createGroupFailure(message) {
+    return {
+        type: action.CREATE_GROUP_FAILURE,
+        message,
+    }
+}
+
+
+//ruleCreate, groupAction, ruleAction (primaju type)
