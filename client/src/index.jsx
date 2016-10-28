@@ -1,14 +1,14 @@
-import React from 'react';
-import {render} from 'react-dom';
-import {Router, browserHistory} from 'react-router';
-import {Provider} from 'react-redux';
-
-import routes from './routes';
-import configureStore from './store/StoreConfiguration';
-import Api from './utils/Api';
+import React from "react";
+import {render} from "react-dom";
+import {Router, browserHistory} from "react-router";
+import {Provider} from "react-redux";
+import routes from "./routes";
+import configureStore from "./store/StoreConfiguration";
+import {getProfile} from "./actions/actionCreators";
 
 const renderApplication = (initialStore) => {
     const store = configureStore(initialStore);
+    store.dispatch(getProfile());
 
     render(
         <Provider store={store}>
@@ -18,6 +18,4 @@ const renderApplication = (initialStore) => {
     );
 };
 
-Api.get('profile').then(response => {
-    console.log(response.data);
-});
+renderApplication();
