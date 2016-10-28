@@ -48,7 +48,7 @@ func (service *userService) Get(userID int) (*rocket.User, error) {
 func (service *userService) GetByGoogleID(googleID string) (*rocket.User, error) {
 	user, err := service.selectUserByGoogleIDQuery(googleID)
 	if err != nil {
-		return nil, fmt.Errorf("select user: %v", err)
+		return nil, err
 	}
 
 	return user, nil
@@ -64,6 +64,15 @@ func (service *userService) GetAll() ([]*rocket.User, error) {
 }
 
 func (service *userService) Add(user *rocket.User) error {
+	res, err:= service.db.Exec(`INSERT INTO users SET google_account_id=?, first_name=?, last_name=?, email=?`, user.GoogleID, user.FirstName, user.LastName,user.Email)
+	if err != nil {
+		return err
+	}
+	if lastID, err := res.LastInsertId(); err == nil {
+		user.ID = int(lastID)
+	} else {
+		return err
+	}
 	return nil
 }
 
@@ -97,7 +106,7 @@ func (service *userService) selectUserByGoogleIDQuery(googleID string) (*rocket.
 
 	err = userQuery.QueryRow(googleID).Scan(&(user.ID), &(user.FirstName), &(user.LastName), &(user.Title), &(user.Email))
 	if err != nil {
-		return nil, fmt.Errorf("execute query: %v", err)
+		return nil, err
 	}
 
 	return &user, nil
