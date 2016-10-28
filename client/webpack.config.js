@@ -3,9 +3,6 @@ var webpack = require('webpack');
 var path = require('path');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 
-// Local
-var loaders = require('./webpack.loaders');
-
 module.exports = {
     entry: [
         './src/index.jsx'
