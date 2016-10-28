@@ -40,7 +40,12 @@ module.exports = {
         inline: true,
         historyApiFallback: true,
         port: '4000',
-        host: 'rocket.dev'
+        host: 'rocket.dev',
+        proxy: {
+            '/api/': {
+                target: 'http://localhost:8000'
+            }
+        }
     },
     plugins: [
         new HtmlWebpackPlugin({

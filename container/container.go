@@ -189,7 +189,7 @@ func (c *Container) firewall(h http.HandlerFunc) http.HandlerFunc {
 		if strings.HasPrefix(r.URL.Path, "/api/") && request.GetToken(r).User() == nil {
 			if strings.Contains(r.Header.Get("Accept"), "application/json") {
 				json.NewEncoder(w).Encode(map[string]interface{}{
-					"error": "not_logged_in",
+					"error":    "not_logged_in",
 					"loginURL": redirectTo,
 				})
 			} else {

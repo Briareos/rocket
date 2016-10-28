@@ -18,9 +18,11 @@ const renderApplication = (initialState) => {
     document.getElementById('loading-state').className = "loading-state hide"
 };
 
+let loginURL = "/login";
+
 Api.get('profile').then(response => {
-    if (!response.ok && response.error === "not_logged_in") {
-        window.location.href = response.loginURL;
+    if (response.data.error === "not_logged_in" && window.location.pathname != loginURL) {
+        window.location.pathname = loginURL;
         return;
     }
     let initialState = response.data;
