@@ -23,6 +23,7 @@ type ProfileResponse struct {
 
 func Profile(userService rocket.UserService, groupService rocket.GroupService) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//TODO: Losmi povezi sa sesijom
 		user, err := userService.Get(1)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

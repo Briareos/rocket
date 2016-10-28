@@ -32,12 +32,13 @@ type User struct {
 
 type UserService interface {
 	Get(int) (*User, error)
+	GetByGoogleID(string) (*User, error)
 	GetAll() ([]*User, error)
 	Add(*User) error
 
-	//JoinGroup(*User, *Group) error
-	//LeaveGroup(*User, *Group) error
-	//
+	JoinGroup(*User, *Group) error
+	LeaveGroup(*User, *Group) error
+
 	//WatchGroup(*User, *Group) error
 	//UnWatchGroup(*User, *Group) error
 	//

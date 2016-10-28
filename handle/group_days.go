@@ -1,17 +1,18 @@
 package handle
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Briareos/rocket"
-	"time"
 	"net/http"
 	"strconv"
-	"fmt"
-	"encoding/json"
+	"time"
 )
 
 type GroupDaysResponse struct {
-	Group rocket.Group
-	Days  []Day
+	Group          rocket.Group
+	Days           []Day
+	TotalBodyCount int `json:"totalBodyCount"`
 }
 
 type Day struct {
@@ -31,12 +32,6 @@ func GroupDays(groupService rocket.GroupService) http.HandlerFunc {
 		idNumber, err := strconv.Atoi(id)
 		if err != nil {
 			http.Error(w, "Month not provided correctly", http.StatusInternalServerError)
-			return
-		}
-
-		group, err := groupService.Get(idNumber)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -66,6 +61,20 @@ func GroupDays(groupService rocket.GroupService) http.HandlerFunc {
 
 		var groupDays GroupDaysResponse
 
+		group, err := groupService.Get(idNumber)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		totalBodyCount, err := groupService.GetTotalBodyCount(group)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		groupDays.TotalBodyCount = totalBodyCount
+
 		// First day of month in given year
 		date := time.Date(yearNumber, time.Month(monthNumber), 1, 0, 0, 0, 0, time.UTC)
 		daysInMonth := time.Date(yearNumber, time.Month(monthNumber)+1, 0, 0, 0, 0, 0, time.UTC).Day()
@@ -76,7 +85,6 @@ func GroupDays(groupService rocket.GroupService) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println(date)
 		for i := 1; i <= daysInMonth; i++ {
 			if _, ok := availableBodyCounts[date]; !ok {
 				availableBodyCounts[date] = 0
