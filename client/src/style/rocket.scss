@@ -1,7 +1,14 @@
 @import "base/module";
 @import "components/module";
 
+body {
+  display: flex;
+  position: relative;
+}
+
 #rocket-application {
   display: flex;
-  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  z-index: 1000;
 }
