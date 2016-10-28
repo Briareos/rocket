@@ -4,14 +4,11 @@ import * as action from "./actions";
 export function getProfile() {
     return dispatch => {
         dispatch(getProfileStarted());
-        console.log(getProfileStarted());
         Api.get('profile').then(
             response => {
-                console.log(getProfileSuccess(response.data.user, response.data.groups, response.data.users));
                 dispatch(getProfileSuccess(response.data.user, response.data.groups, response.data.users));
             },
             error => {
-                console.log(getProfileFailure(error));
                 dispatch(getProfileFailure(error));
             }
         )
@@ -40,3 +37,40 @@ function getProfileFailure(message) {
     }
 }
 
+export function getGroupDays(id, month, year) {
+    return dispatch => {
+        dispatch(getGroupDaysStarted());
+        Api.get('groupDays', {
+            params: {id, month, year}
+        }).then(
+            response => {
+                dispatch(getGroupDaysSuccess(id, response.data.Days, response.data.totalBodyCount));
+            },
+            error => {
+                dispatch(getGroupDaysFailure(error));
+            }
+        )
+    }
+}
+
+function getGroupDaysStarted() {
+    return {
+        type: action.GET_GROUP_DAYS
+    }
+}
+
+function getGroupDaysSuccess(groupID, days, bodyCount) {
+    return {
+        type: action.GET_GROUP_DAYS_SUCCESS,
+        groupID,
+        days,
+        bodyCount,
+    }
+}
+
+function getGroupDaysFailure(message) {
+    return {
+        type: action.GET_GROUP_DAYS_FAILURE,
+        message,
+    }
+}
