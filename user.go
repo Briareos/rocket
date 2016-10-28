@@ -39,8 +39,8 @@ type UserService interface {
 	JoinGroup(*User, *Group) error
 	LeaveGroup(*User, *Group) error
 
-	//WatchGroup(*User, *Group) error
-	//UnWatchGroup(*User, *Group) error
+	WatchGroup(*User, *Group) error
+	UnWatchGroup(*User, *Group) error
 
 	MuteRule(*User, *Rule) error
 	UnMuteRule(*User, *Rule) error

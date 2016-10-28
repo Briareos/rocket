@@ -11,6 +11,8 @@ type GroupActionType string
 const (
 	Join GroupActionType = "join"
 	Leave GroupActionType = "leave"
+	Watch GroupActionType = "watch"
+	UnWatch GroupActionType = "unwatch"
 )
 
 type GroupActionRequest struct {
@@ -37,7 +39,10 @@ func GroupAction(userService rocket.UserService, groupService rocket.GroupServic
 		}
 		defer r.Body.Close()
 
-		if requestBody.Type != Join && requestBody.Type != Leave {
+		if requestBody.Type != Join &&
+			requestBody.Type != Leave &&
+			requestBody.Type != Watch &&
+			requestBody.Type != UnWatch {
 			http.Error(w, "Missing parameter 'type'.", http.StatusInternalServerError)
 			return
 		}
@@ -65,6 +70,22 @@ func GroupAction(userService rocket.UserService, groupService rocket.GroupServic
 
 		if requestBody.Type == Leave {
 			err = userService.LeaveGroup(user, group)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		if requestBody.Type == Watch {
+			err = userService.WatchGroup(user, group)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		if requestBody.Type == UnWatch {
+			err = userService.UnWatchGroup(user, group)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
