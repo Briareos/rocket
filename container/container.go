@@ -4,18 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/Briareos/rocket"
 	"github.com/Briareos/rocket/handle"
 	"github.com/Briareos/rocket/request"
+	oursql "github.com/Briareos/rocket/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/configor"
 	"github.com/pkg/errors"
 	"log"
+	"net"
 	"net/http"
 	"reflect"
-	"net"
 	"strings"
-	"github.com/Briareos/rocket"
 )
 
 type Config struct {
@@ -114,6 +115,18 @@ func (c *Container) DB() *sql.DB {
 	}).(*sql.DB)
 }
 
+func (c *Container) UserService() rocket.UserService {
+	return c.once.Do("UserService", func() interface{} {
+		return oursql.NewUserService(c.DB())
+	}).(rocket.UserService)
+}
+
+func (c *Container) GroupService() rocket.GroupService {
+	return c.once.Do("GroupService", func() interface{} {
+		return oursql.NewGroupService(c.DB())
+	}).(rocket.GroupService)
+}
+
 func (c *Container) HomeURL() string {
 	return c.once.Do("HomeURL", func() interface{} {
 		host, port, err := net.SplitHostPort(c.conf.HTTPAddr)
@@ -132,7 +145,7 @@ func (c *Container) HomeURL() string {
 		} else if port != "" {
 			port = ":" + port
 		}
-		return strings.TrimRight(proto + host + port, "/")
+		return strings.TrimRight(proto+host+port, "/")
 	}).(string)
 }
 
@@ -142,6 +155,7 @@ func (c *Container) HTTPHandler() *http.ServeMux {
 		http.HandleFunc("/oauth/google/callback", c.makeHandle(handle.GoogleOAuthCallback(c.conf.GoogleOAuthID, c.conf.GoogleOAuthSecret, redirectURI)))
 		http.HandleFunc("/oauth/google", c.makeHandle(handle.GoogleOAuth(c.conf.GoogleOAuthID, redirectURI)))
 		http.HandleFunc("/api/current-user", c.makeHandle(handle.CurrentUser()))
+		http.HandleFunc("/api/profile", c.makeHandle(handle.Profile(c.UserService(), c.GroupService())))
 		http.HandleFunc("/", c.makeHandle(handle.Index()))
 		return http.DefaultServeMux
 	}).(*http.ServeMux)

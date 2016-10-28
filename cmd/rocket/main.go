@@ -6,11 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/Briareos/rocket"
 	"github.com/Briareos/rocket/container"
-	"github.com/Briareos/rocket/sql"
-	"time"
-	"strconv"
 )
 
 type groupDays struct {
@@ -184,6 +180,7 @@ func main() {
 	c := container.MustLoadFromPath(filepath.Join("..", "..", "config.yml"))
 	c.MustWarmUp()
 
+	c.HTTPHandler().Handle("/api/v1/groupDays", makeGroupDays())
 	userService := sql.NewUserService(c.DB())
 	groupService := sql.NewGroupService(c.DB())
 
