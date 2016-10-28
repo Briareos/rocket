@@ -8,67 +8,11 @@ import (
 
 	"github.com/Briareos/rocket"
 	"github.com/Briareos/rocket/container"
-	"strconv"
-	"time"
 	"github.com/Briareos/rocket/response"
 	"github.com/Briareos/rocket/sql"
+	"strconv"
+	"time"
 )
-
-func makeProfileFunc(userService rocket.UserService, groupService rocket.GroupService) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := userService.Get(1)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		joinedGroups := []int{}
-		watchedGroups := []int{}
-		mutedRules := []int{}
-
-		for _, group := range user.JoinedGroups {
-			joinedGroups = append(joinedGroups, group.ID)
-		}
-		for _, group := range user.WatchedGroups {
-			watchedGroups = append(watchedGroups, group.ID)
-		}
-		for _, rule := range user.MutedRules {
-			mutedRules = append(mutedRules, rule.ID)
-		}
-
-		allUsers, err := userService.GetAll()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		allGroups, err := groupService.GetAll()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		responseData := response.ProfileResponse{
-			User: response.ProfileUser{
-				User:          user,
-				JoinedGroups:  joinedGroups,
-				WatchedGroups: watchedGroups,
-				MutedRules:    mutedRules,
-			},
-			Groups: allGroups,
-			Users:  allUsers,
-		}
-
-		data, err := json.Marshal(responseData)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprint(w, string(data))
-	})
-}
 
 func makeGroupDays(groupService rocket.GroupService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -159,10 +103,8 @@ func main() {
 	c := container.MustLoadFromPath(filepath.Join("..", "..", "config.yml"))
 	c.MustWarmUp()
 
-	userService := sql.NewUserService(c.DB())
 	groupService := sql.NewGroupService(c.DB())
 
-	c.HTTPHandler().Handle("/api/v1/profile", makeProfileFunc(userService, groupService))
 	c.HTTPHandler().Handle("/api/v1/groupDays", makeGroupDays(groupService))
 
 	c.HTTPServer().ListenAndServe()
