@@ -76,7 +76,6 @@ func GroupDays(groupService rocket.GroupService) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println(date)
 		for i := 1; i <= daysInMonth; i++ {
 			if _, ok := availableBodyCounts[date]; !ok {
 				availableBodyCounts[date] = 0
