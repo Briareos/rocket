@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"net"
 	"strings"
+	"github.com/Briareos/rocket"
 )
 
 type Config struct {
@@ -151,14 +152,17 @@ func (c *Container) makeHandle(h http.HandlerFunc) http.HandlerFunc {
 
 func (c *Container) injectToken(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tok, err := c.Session().Get(r, "session")
+		session, err := c.Session().Get(r, "session")
 		if err != nil {
 			http.Error(w, "Invalid session provided", 500)
 			return
 		}
+		tok := new(rocket.Token)
+
+		//tok.SetUser(user)
 		r = r.WithContext(context.WithValue(r.Context(), request.Token, tok))
 		h(w, r)
-		tok.Store()
+		session.Store()
 	}
 }
 
