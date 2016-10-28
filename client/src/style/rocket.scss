@@ -11,6 +11,9 @@ body {
   flex: 1 1 0;
   flex-direction: column;
   z-index: 1000;
+  font-family: Arial, 'sans-serif';
+  font-size: 14px;
+  color: $dark-text-color;
 
   .application-wrapper {
     flex: 1 1 0;
