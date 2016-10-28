@@ -74,3 +74,82 @@ function getGroupDaysFailure(message) {
         message,
     }
 }
+
+export function createGroup(name, description, busyValue = false, remoteValue = true) {
+    return dispatch => {
+        dispatch(createGroupStarted());
+        Api.post('groupCreate', {
+            name,
+            description,
+            busyValue,
+            remoteValue,
+        }).then(
+            response => {
+                dispatch(createGroupSuccess(response.data));
+            },
+            error => {
+                dispatch(createGroupFailure(error));
+            }
+        )
+    }
+}
+
+function createGroupStarted() {
+    return {
+        type: action.CREATE_GROUP
+    }
+}
+
+function createGroupSuccess(group) {
+    return {
+        type: action.CREATE_GROUP_SUCCESS,
+        group,
+    }
+}
+
+function createGroupFailure(message) {
+    return {
+        type: action.CREATE_GROUP_FAILURE,
+        message,
+    }
+}
+
+export function joinGroup(groupID) {
+    return dispatch => {
+        dispatch(joinGroupStarted());
+        Api.post('groupAction', {
+            type: 'join',
+            groupID: groupID,
+        }).then(
+            response => {
+                dispatch(joinGroupSuccess(groupID));
+            },
+            error => {
+                dispatch(joinGroupFailure(error));
+            }
+        )
+    }
+}
+
+function joinGroupStarted() {
+    return {
+        type: action.JOIN_GROUP,
+    }
+}
+
+function joinGroupSuccess(groupID) {
+    return {
+        type: action.JOIN_GROUP_SUCCESS,
+        groupID,
+    }
+}
+
+function joinGroupFailure(message) {
+    return {
+        type: action.JOIN_GROUP_FAILURE,
+        message,
+    }
+}
+
+
+//ruleCreate, groupAction, ruleAction (primaju type)
