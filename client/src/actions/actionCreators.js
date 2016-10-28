@@ -79,10 +79,10 @@ export function createGroup(name, description, busyValue = false, remoteValue = 
     return dispatch => {
         dispatch(createGroupStarted());
         return Api.post('groupCreate', {
-            name,
-            description,
-            busyValue,
-            remoteValue,
+            name: name,
+            description: description,
+            busyValue: busyValue,
+            remoteValue: remoteValue
         }).then(
             response => {
                 dispatch(createGroupSuccess(response.data));
