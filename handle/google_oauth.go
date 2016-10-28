@@ -1,11 +1,11 @@
 package handle
 
 import (
+	"encoding/json"
 	"fmt"
-	"net/http"
 	"github.com/davecgh/go-spew/spew"
 	"io/ioutil"
-	"encoding/json"
+	"net/http"
 	"net/url"
 )
 
@@ -23,7 +23,7 @@ type userInfo struct {
 }
 
 func GoogleOAuthCallback(clientID, clientSecret, redirect string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r*http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		code := r.FormValue("code")
 		if code == "" {
 			http.Error(w, `The "code" parameter is missing`, http.StatusInternalServerError)
