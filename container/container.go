@@ -4,16 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/Briareos/rocket"
 	"github.com/Briareos/rocket/handle"
 	"github.com/Briareos/rocket/request"
+	oursql "github.com/Briareos/rocket/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/configor"
 	"github.com/pkg/errors"
 	"log"
+	"net"
 	"net/http"
 	"reflect"
-	"net"
 	"strings"
 )
 
@@ -113,6 +115,18 @@ func (c *Container) DB() *sql.DB {
 	}).(*sql.DB)
 }
 
+func (c *Container) UserService() rocket.UserService {
+	return c.once.Do("UserService", func() interface{} {
+		return oursql.NewUserService(c.DB())
+	}).(rocket.UserService)
+}
+
+func (c *Container) GroupService() rocket.GroupService {
+	return c.once.Do("GroupService", func() interface{} {
+		return oursql.NewGroupService(c.DB())
+	}).(rocket.GroupService)
+}
+
 func (c *Container) HomeURL() string {
 	return c.once.Do("HomeURL", func() interface{} {
 		host, port, err := net.SplitHostPort(c.conf.HTTPAddr)
@@ -131,15 +145,17 @@ func (c *Container) HomeURL() string {
 		} else if port != "" {
 			port = ":" + port
 		}
-		return strings.TrimRight(proto + host + port, "/")
+		return strings.TrimRight(proto+host+port, "/")
 	}).(string)
 }
 
 func (c *Container) HTTPHandler() *http.ServeMux {
 	return c.once.Do("HTTPHandler", func() interface{} {
-		http.HandleFunc("/oauth/google/callback", c.makeHandle(handle.GoogleOAuthCallback()))
-		http.HandleFunc("/oauth/google", c.makeHandle(handle.GoogleOAuth(c.conf.GoogleOAuthID, c.HomeURL() + "/oauth/google/callback")))
+		redirectURI := c.HomeURL() + "/oauth/google/callback"
+		http.HandleFunc("/oauth/google/callback", c.makeHandle(handle.GoogleOAuthCallback(c.conf.GoogleOAuthID, c.conf.GoogleOAuthSecret, redirectURI)))
+		http.HandleFunc("/oauth/google", c.makeHandle(handle.GoogleOAuth(c.conf.GoogleOAuthID, redirectURI)))
 		http.HandleFunc("/api/current-user", c.makeHandle(handle.CurrentUser()))
+		http.HandleFunc("/api/profile", c.makeHandle(handle.Profile(c.UserService(), c.GroupService())))
 		http.HandleFunc("/", c.makeHandle(handle.Index()))
 		return http.DefaultServeMux
 	}).(*http.ServeMux)
@@ -151,14 +167,16 @@ func (c *Container) makeHandle(h http.HandlerFunc) http.HandlerFunc {
 
 func (c *Container) injectToken(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tok, err := c.Session().Get(r, "session")
+		session, err := c.Session().Get(r, "session")
 		if err != nil {
 			http.Error(w, "Invalid session provided", 500)
 			return
 		}
+		tok := rocket.NewToken(session)
+		//tok.SetUser(user)
 		r = r.WithContext(context.WithValue(r.Context(), request.Token, tok))
 		h(w, r)
-		tok.Store()
+		session.Store()
 	}
 }
 

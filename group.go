@@ -1,5 +1,7 @@
 package rocket
 
+import "time"
+
 var DefaultAvailability = AvailabilityMap{
 	Available:   true,
 	Remote:      true,
@@ -29,4 +31,10 @@ type GroupService interface {
 
 	// AddRule creates a Rule and assigns it to the Group
 	AddRule(*Group, *Rule) error
+
+	// GetBodyCount returns the number of available people
+	GetAvailableBodyCounts(*Group, time.Time) (map[time.Time]int, error)
+
+	// GetTotalBodyCount returns the total number of people in group
+	GetTotalBodyCount(*Group) (int, error)
 }
