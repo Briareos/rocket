@@ -24,10 +24,10 @@ type User struct {
 	LastName  string `json:"last_name"`
 	Title     string `json:"title"`
 
-	JoinedGroups  []*Group  // indexed
-	WatchedGroups []*Group  // indexed
+	JoinedGroups  []*Group  `json:"-"` // indexed
+	WatchedGroups []*Group  `json:"-"` // indexed
 	Statuses      []*Status `json:"statuses,omitempty"`
-	MutedRules    []*Rule   // indexed
+	MutedRules    []*Rule   `json:"-"` // indexed
 }
 
 type UserService interface {
