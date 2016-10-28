@@ -1,17 +1,26 @@
 package rocket
 
-import "net/http"
+import (
+	"github.com/gorilla/sessions"
+)
 
 type Token struct {
-	req  *http.Request
-	user *User
+	session *sessions.Session
+	user    *User
 }
 
-func NewToken(r *http.Request) *Token {
-	return new(Token)
+func NewToken(s *sessions.Session) *Token {
+	return &Token{
+		session: s,
+	}
 }
 
 func (t *Token) SetUser(user *User) {
+	if user == nil {
+		delete(t.session.Values, "userID")
+	} else {
+		t.session.Values["userID"] = user.ID
+	}
 	t.user = user
 }
 

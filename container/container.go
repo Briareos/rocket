@@ -138,8 +138,9 @@ func (c *Container) HomeURL() string {
 
 func (c *Container) HTTPHandler() *http.ServeMux {
 	return c.once.Do("HTTPHandler", func() interface{} {
-		http.HandleFunc("/oauth/google/callback", c.makeHandle(handle.GoogleOAuthCallback()))
-		http.HandleFunc("/oauth/google", c.makeHandle(handle.GoogleOAuth(c.conf.GoogleOAuthID, c.HomeURL() + "/oauth/google/callback")))
+		redirectURI := c.HomeURL() + "/oauth/google/callback"
+		http.HandleFunc("/oauth/google/callback", c.makeHandle(handle.GoogleOAuthCallback(c.conf.GoogleOAuthID, c.conf.GoogleOAuthSecret, redirectURI)))
+		http.HandleFunc("/oauth/google", c.makeHandle(handle.GoogleOAuth(c.conf.GoogleOAuthID, redirectURI)))
 		http.HandleFunc("/api/current-user", c.makeHandle(handle.CurrentUser()))
 		http.HandleFunc("/", c.makeHandle(handle.Index()))
 		return http.DefaultServeMux
@@ -157,8 +158,7 @@ func (c *Container) injectToken(h http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, "Invalid session provided", 500)
 			return
 		}
-		tok := new(rocket.Token)
-
+		tok := rocket.NewToken(session)
 		//tok.SetUser(user)
 		r = r.WithContext(context.WithValue(r.Context(), request.Token, tok))
 		h(w, r)
