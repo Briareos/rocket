@@ -3,13 +3,13 @@ package container
 import (
 	"database/sql"
 	"fmt"
+	"github.com/Briareos/rocket/handle"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/configor"
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"reflect"
-	"github.com/Briareos/rocket/handle"
 )
 
 type Config struct {
@@ -97,7 +97,7 @@ func (c *Container) MustWarmUp() {
 
 func (c *Container) DB() *sql.DB {
 	return c.once.Do("DB", func() interface{} {
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@%s/%s", c.conf.DBUser, c.conf.DBPassword, c.conf.DBHost, c.conf.DBName))
+		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@(%s)/%s?parseTime=true", c.conf.DBUser, c.conf.DBPassword, c.conf.DBHost, c.conf.DBName))
 		if err != nil {
 			panic(errors.New(`container: failed to connect to mysql server`))
 		}

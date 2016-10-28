@@ -1,0 +1,5 @@
+db_user: root
+db_password: patkatebi123
+db_host: 52.24.138.122:3306
+db_name: raketa
+http_addr: ":8000"
